@@ -1,0 +1,2 @@
+- Navigation links lässt sich unter Windows wieder anklicken
+- EN: The navigation on the left is clickable on Windows again

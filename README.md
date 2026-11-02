@@ -2,6 +2,8 @@
 
 Sound-Steuerung für Windows: jede App einzeln regeln, Stimme mit KI-Rauschunterdrückung, Stream-Mix mit OBS, Equalizer für den ganzen PC, Soundboard, Sprechtaste und Stream-Deck-Plugin.
 
+**Website:** https://lmxlama.github.io/fusionx-audio/
+
 **Download:** unter [Releases](../../releases/latest) die Datei `Fusion-X Audio Setup x.y.z.exe` laden und starten. Fusion-X aktualisiert sich danach selbst.
 
 Anleitung, Funktionen und Entwickler-Infos: [START-HIER.md](START-HIER.md)

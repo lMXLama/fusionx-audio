@@ -1,0 +1,10 @@
+{
+  "1.1.1": {
+    "de": ["Navigation links lässt sich unter Windows wieder anklicken", "Fenster lässt sich weiter über die obere Leiste verschieben"],
+    "en": ["The navigation on the left is clickable on Windows again", "You can still move the window by its top bar"]
+  },
+  "1.1.0": {
+    "de": ["Stream-Mix: zweiter Regler pro App für deinen OBS-Stream", "Equalizer für den ganzen PC-Sound mit 8 Vorlagen", "Automatische Updates", "Englische Oberfläche", "Sprechtaste, Soundboard, Einblendung über Spielen, Lieblingsgeräte"],
+    "en": ["Stream mix: a second fader per app for your OBS stream", "System-wide equalizer with 8 presets", "Automatic updates", "English interface", "Push to talk, soundboard, in-game overlay, favorite devices"]
+  }
+}

@@ -68,9 +68,16 @@ Das Repository ist https://github.com/lMXLama/fusionx-audio. GitHub baut den Ins
    git tag v1.1.1
    git push origin main --tags
    ```
+   Vorher kurz eintragen, was neu ist: in `assets/release-notes.md` (landet automatisch im GitHub-Release, Zeilen mit `EN:` sind die englische Fassung) und in `docs/changelog.json` (für die Website).
 3. Auf GitHub unter **Actions** läuft „Release“ (ca. 5–10 Minuten). Danach liegt unter **Releases** die neue Version.
 
 Ein eigener Token ist dafür nicht nötig, GitHub Actions bringt seinen eigenen mit. Ohne Code-Signing zeigt Windows beim allerersten Installieren eine SmartScreen-Warnung; die Updates laufen trotzdem.
+
+## Website
+
+Die Download-Seite liegt im Ordner `docs/` und wird über GitHub Pages veröffentlicht: https://lmxlama.github.io/fusionx-audio/
+
+Einmalig einschalten: im Repo **Settings → Pages**, bei „Source“ **Deploy from a branch**, Branch **main** und Ordner **/docs** wählen, **Save**. Danach ist jede Änderung in `docs/` nach ca. einer Minute online. Die Seite zeigt Version, Größe und Download-Link automatisch aus dem neuesten GitHub-Release.
 
 ## Stream Deck
 

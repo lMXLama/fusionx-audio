@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fusion-X Audio – Sound-Steuerung für Windows</title>
+<meta name="description" content="Fusion-X Audio regelt jede App einzeln, macht deine Stimme mit KI klar und rauschfrei und gibt deinem Stream einen eigenen Mix. Kostenlos für Windows, mit oder ohne Audio-Interface.">
+<meta name="theme-color" content="#060c16">
+<link rel="canonical" href="https://lmxlama.github.io/fusionx-audio/">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Fusion-X Audio – Dein Sound. Komplett im Griff.">
+<meta property="og:description" content="Jede App einzeln regeln, Stimme mit KI-Rauschunterdrückung, Stream-Mix mit OBS, Equalizer für den ganzen PC. Kostenlos für Windows.">
+<meta property="og:image" content="https://lmxlama.github.io/fusionx-audio/og.jpg">
+<meta property="og:url" content="https://lmxlama.github.io/fusionx-audio/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="fonts/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Fusion-X Audio","operatingSystem":"Windows 10, Windows 11","applicationCategory":"MultimediaApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"downloadUrl":"https://github.com/lMXLama/fusionx-audio/releases/latest","author":{"@type":"Person","name":"L_MX_"},"inLanguage":["de","en"]}
+</script>
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">Zum Inhalt springen</a>
+
+<header class="nav" id="top">
+  <a class="brand" href="#top" aria-label="Fusion-X Audio, nach oben">
+    <img src="img/emblem.webp" alt="" width="36" height="36">
+    <span>Fusion-X <b>Audio</b></span>
+  </a>
+  <nav class="links" aria-label="Hauptnavigation">
+    <a href="#funktionen" data-i18n="nav.features">Funktionen</a>
+    <a href="#ausprobieren" data-i18n="nav.demo">Ausprobieren</a>
+    <a href="#galerie" data-i18n="nav.gallery">Screenshots</a>
+    <a href="#faq" data-i18n="nav.faq">Fragen</a>
+    <a href="#kontakt" data-i18n="nav.contact">Kontakt</a>
+  </nav>
+  <div class="navright">
+    <button class="lang" id="langBtn" type="button" aria-label="Sprache wechseln / Switch language"><span data-l="de">DE</span><span data-l="en">EN</span></button>
+    <a class="btn small primary" href="#download" data-i18n="nav.download">Download</a>
+  </div>
+</header>
+
+<main id="main">
+  <!-- ================= Hero ================= -->
+  <section class="hero">
+    <canvas id="xwave" aria-hidden="true"></canvas>
+    <div class="hero-copy">
+      <h1 data-i18n="hero.title">Dein Sound.<br>Komplett im Griff.</h1>
+      <p class="lead" data-i18n="hero.lead">Fusion-X Audio regelt jede App einzeln, macht deine Stimme klar und rauschfrei und gibt deinem Stream einen eigenen Mix. Kostenlos für Windows, mit oder ohne Audio-Interface.</p>
+      <div class="cta">
+        <a class="btn big primary dl" href="https://github.com/lMXLama/fusionx-audio/releases/latest" data-dl>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5l7.5-1v7H3zM11.5 4.4L21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.4z" fill="currentColor"/></svg>
+          <span><b data-i18n="cta.win">Für Windows herunterladen</b><small data-ver>Kostenlos</small></span>
+        </a>
+        <a class="btn big ghost" href="#galerie" data-i18n="cta.look">So sieht es aus</a>
+      </div>
+      <ul class="facts">
+        <li data-i18n="fact.free">Kostenlos, ohne Abo</li>
+        <li data-i18n="fact.win">Windows 10 und 11</li>
+        <li data-i18n="fact.lang">Deutsch und Englisch</li>
+        <li data-i18n="fact.upd">Updates automatisch</li>
+      </ul>
+    </div>
+    <figure class="hero-shot" id="heroShot">
+      <div class="win">
+        <div class="winbar" aria-hidden="true"><i></i><i></i><i></i><span>Fusion-X Audio</span></div>
+        <img src="img/streammix.webp" width="1600" height="1000" alt="Fusion-X Mixer mit Stream-Mix: zwei Regler pro App, links für dich, rechts für den Stream" data-i18n-alt="alt.hero">
+      </div>
+      <div class="osd" aria-hidden="true"><img src="img/osd-stumm.webp" alt="" width="410" height="98"></div>
+    </figure>
+  </section>
+
+  <!-- ================= Läuft mit ================= -->
+  <section class="works" aria-labelledby="worksT">
+    <h2 id="worksT" data-i18n="works.t">Läuft mit dem, was du schon hast</h2>
+    <ul>
+      <li>Discord</li><li>OBS Studio</li><li>Spotify</li><li>Microsoft Teams</li><li>Zoom</li><li>Elgato Stream Deck</li><li>Focusrite</li><li>Universal Audio</li><li>GoXLR</li><li>RØDE</li><li data-i18n="works.hs">jedem Headset</li><li data-i18n="works.lap">Laptop-Mikros</li>
+    </ul>
+  </section>
+
+  <!-- ================= Tour ================= -->
+  <section class="tour" id="funktionen" aria-labelledby="tourT">
+    <div class="sechead">
+      <h2 id="tourT" data-i18n="tour.t">Alles, was eine Interface-App kann. Für jeden PC.</h2>
+      <p data-i18n="tour.p">Hersteller-Apps steuern nur ihr eigenes Gerät. Fusion-X steuert deinen ganzen PC-Sound, egal welches Mikro oder Headset du hast.</p>
+    </div>
+    <div class="tourgrid">
+      <div class="steps">
+        <article class="step" data-shot="mixer">
+          <span class="tag mixer" data-i18n="t1.k">Mixer</span>
+          <h3 data-i18n="t1.t">Jede App ihr eigener Regler</h3>
+          <p data-i18n="t1.p">Spiel leiser, Discord lauter, Spotify auf die Lautsprecher: Jede App bekommt einen Fader, einen Live-Pegel und ihr eigenes Ausgabegerät. Windows vergisst Lautstärken gern, Fusion-X merkt sie sich.</p>
+          <img class="m" src="img/mixer.webp" alt="" loading="lazy" width="1600" height="1000">
+        </article>
+        <article class="step" data-shot="mikrofon">
+          <span class="tag voice" data-i18n="t2.k">Stimme</span>
+          <h3 data-i18n="t2.t">Deine Stimme wie im Studio</h3>
+          <p data-i18n="t2.p">KI-Rauschunterdrückung filtert Tastatur, Lüfter und bellende Hunde. Störgeräusch-Sperre, Equalizer, Kompressor und De-Esser sind fertig eingestellt. Eine Vorlage wie „Broadcast“ oder „Gaming“ reicht.</p>
+          <img class="m" src="img/mikrofon.webp" alt="" loading="lazy" width="1600" height="1000">
+        </article>
+        <article class="step" data-shot="mikrocheck">
+          <span class="tag voice" data-i18n="t3.k">Mikro-Check</span>
+          <h3 data-i18n="t3.t">In 10 Sekunden richtig eingestellt</h3>
+          <p data-i18n="t3.p">Kurz still sein, kurz sprechen. Fusion-X misst Raum und Stimme und stellt Lautstärke, Rauschfilter und den richtigen Eingang deines Interfaces selbst ein. Hängt dein Mikro nur an Eingang 1, hört man dich trotzdem auf beiden Seiten.</p>
+          <img class="m" src="img/mikrocheck.webp" alt="" loading="lazy" width="1600" height="1000">
+        </article>
+        <article class="step" data-shot="streammix">
+          <span class="tag stream" data-i18n="t4.k">Stream-Mix</span>
+          <h3 data-i18n="t4.t">Ein Mix für dich, einer für deinen Stream</h3>
+          <p data-i18n="t4.p">Zwei Regler pro App: links, was du hörst, rechts, was dein Publikum hört. Fusion-X steuert dafür OBS direkt, ohne Zusatz-Treiber. Musik nur für den Stream, Discord nur für dich: ein Klick.</p>
+          <img class="m" src="img/streammix.webp" alt="" loading="lazy" width="1600" height="1000">
+        </article>
+        <article class="step" data-shot="equalizer">
+          <span class="tag mixer" data-i18n="t5.k">Equalizer</span>
+          <h3 data-i18n="t5.t">Besserer Klang für alles, was du hörst</h3>
+          <p data-i18n="t5.p">Zehn Bänder für den ganzen PC, mit Vorlagen wie „Schritte hören“, „Bass-Boost“ oder „Stimmen klar“. Ohne Verzögerung und in Profilen speicherbar: beim Zocken Schritte, danach Musik.</p>
+          <img class="m" src="img/equalizer.webp" alt="" loading="lazy" width="1600" height="1000">
+        </article>
+        <article class="step" data-shot="soundboard">
+          <span class="tag stream" data-i18n="t6.k">Soundboard</span>
+          <h3 data-i18n="t6.t">Sounds für Voice-Chat und Stream</h3>
+          <p data-i18n="t6.p">Sound reinziehen, Taste drauf, abspielen. Du hörst ihn, dein Discord und dein Stream auch, jeweils in eigener Lautstärke.</p>
+          <img class="m" src="img/soundboard.webp" alt="" loading="lazy" width="1600" height="1000">
+        </article>
+        <article class="step" data-shot="streamdeck-tasten">
+          <span class="tag mixer" data-i18n="t7.k">Stream Deck</span>
+          <h3 data-i18n="t7.t">Gemacht fürs Stream Deck</h3>
+          <p data-i18n="t7.p">Eigenes Plugin mit neun Aktionen und Live-Anzeige auf den Tasten: rot, wenn du stumm bist, Lautstärke als Balken. Auf dem Stream Deck+ regelst du jede App mit dem Drehregler.</p>
+          <img class="m" src="img/streamdeck-tasten.webp" alt="" loading="lazy" width="1600" height="824">
+        </article>
+      </div>
+      <div class="stage" aria-hidden="true">
+        <div class="win">
+          <div class="winbar"><i></i><i></i><i></i><span id="stageName">Mixer</span></div>
+          <div class="frames">
+            <img src="img/mixer.webp" data-f="mixer" class="on" alt="" width="1600" height="1000">
+            <img src="img/mikrofon.webp" data-f="mikrofon" alt="" loading="lazy" width="1600" height="1000">
+            <img src="img/mikrocheck.webp" data-f="mikrocheck" alt="" loading="lazy" width="1600" height="1000">
+            <img src="img/streammix.webp" data-f="streammix" alt="" loading="lazy" width="1600" height="1000">
+            <img src="img/equalizer.webp" data-f="equalizer" alt="" loading="lazy" width="1600" height="1000">
+            <img src="img/soundboard.webp" data-f="soundboard" alt="" loading="lazy" width="1600" height="1000">
+            <img src="img/streamdeck-tasten.webp" data-f="streamdeck-tasten" class="fit" alt="" loading="lazy" width="1600" height="824">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Ausprobieren ================= -->
+  <section class="demo" id="ausprobieren" aria-labelledby="demoT">
+    <div class="sechead">
+      <h2 id="demoT" data-i18n="demo.t">Probier es direkt hier aus</h2>
+      <p data-i18n="demo.p">Zieh an den Reglern. Halte die Sprechtaste gedrückt und sieh zu, wie Spiel und Musik automatisch leiser werden, während Discord laut bleibt.</p>
+    </div>
+    <div class="demogrid">
+      <div class="console" id="console">
+        <div class="ctop">
+          <label class="sw"><input type="checkbox" id="dmStream"><span></span><b data-i18n="demo.stream">Stream-Mix</b></label>
+          <label class="sw"><input type="checkbox" id="dmDuck" checked><span></span><b data-i18n="demo.duck">Beim Sprechen leiser</b></label>
+        </div>
+        <div class="chans" id="chans"></div>
+        <div class="cbottom">
+          <button class="talk" id="dmTalk" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span data-i18n="demo.talk">Halten zum Sprechen</span></button>
+          <p class="hint" id="dmHint" data-i18n="demo.hint">Leertaste geht auch.</p>
+        </div>
+      </div>
+      <div class="wipecard">
+        <h3 data-i18n="wipe.t">Rauschunterdrückung: vorher und nachher</h3>
+        <p data-i18n="wipe.p">Deine Stimme mit Tastatur und Lüfter im Hintergrund. Schieb den Regler, um den Unterschied zu sehen.</p>
+        <div class="wipe" id="wipe">
+          <canvas id="wipeCv" aria-hidden="true"></canvas>
+          <div class="wl" data-i18n="wipe.before">Ohne Fusion-X</div>
+          <div class="wr" data-i18n="wipe.after">Mit KI Studio</div>
+          <div class="handle" id="wipeHandle" role="slider" tabindex="0" aria-label="Vorher und nachher vergleichen" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span></span></div>
+        </div>
+        <div class="legend"><span><i class="n"></i><b data-i18n="wipe.noise">Tastatur, Lüfter, Raum</b></span><span><i class="v"></i><b data-i18n="wipe.voice">Deine Stimme</b></span></div>
+        <p class="wipenote" data-i18n="wipe.note">Läuft direkt auf deinem PC. Nichts wird hochgeladen, nichts braucht Internet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Kleinigkeiten ================= -->
+  <section class="more" aria-labelledby="moreT">
+    <div class="sechead">
+      <h2 id="moreT" data-i18n="more.t">Die Kleinigkeiten, die sonst nerven, sind gelöst</h2>
+    </div>
+    <ul class="morelist">
+      <li><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M7.5 14h9"/></svg><div><b data-i18n="m1.t">Sprechtaste für alle Apps</b><span data-i18n="m1.p">Push-to-Talk gleichzeitig für jedes Spiel und jeden Chat, auch mit den Seitentasten deiner Maus.</span></div></li>
+      <li><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M3 3l18 18"/></svg><div><b data-i18n="m2.t">Stumm-Erinnerung</b><span data-i18n="m2.p">Du redest, aber das Mikro ist aus? Fusion-X sagt es dir, bevor du fünf Minuten ins Leere sprichst.</span></div></li>
+      <li><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 13h10"/></svg><div><b data-i18n="m3.t">Anzeige über dem Spiel</b><span data-i18n="m3.p">Stumm, Profilwechsel oder Lautstärke erscheinen kurz als kleine Einblendung, mitten im Spiel.</span></div></li>
+      <li><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5z"/></svg><div><b data-i18n="m4.t">Lieblingsgeräte</b><span data-i18n="m4.p">Windows springt nach Updates aufs falsche Gerät? Fusion-X holt dein Headset automatisch zurück.</span></div></li>
+      <li><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 12.5l9 5 9-5M3 17l9 5 9-5"/></svg><div><b data-i18n="m5.t">Profile, die selbst wechseln</b><span data-i18n="m5.p">Spiel startet: Gaming. OBS startet: Streaming. Teams startet: Meeting. Mit Stimme, Lautstärken und Equalizer.</span></div></li>
+      <li><svg viewBox="0 0 24 24"><path d="M3 9.5v5h3.2l4.3 3.6V5.9L6.2 9.5H3z"/><path d="M17.5 5.5v10M14 12.5l3.5 3.5 3.5-3.5"/></svg><div><b data-i18n="m6.t">Leiser, wenn du sprichst</b><span data-i18n="m6.p">Spiel und Musik gehen automatisch runter, sobald du redest, und kommen sanft zurück.</span></div></li>
+      <li><svg viewBox="0 0 24 24"><path d="M4 12h4M16 12h4M8 8.5h8v7H8z"/></svg><div><b data-i18n="m7.t">Virtuelles Mikro in einer Minute</b><span data-i18n="m7.p">Damit Discord und OBS deine bearbeitete Stimme hören, installiert Fusion-X das nötige virtuelle Mikro für dich.</span></div></li>
+      <li><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg><div><b data-i18n="m8.t">Updates von selbst</b><span data-i18n="m8.p">Neue Versionen lädt Fusion-X im Hintergrund und installiert sie beim Beenden.</span></div></li>
+    </ul>
+  </section>
+
+  <!-- ================= Interface oder nicht ================= -->
+  <section class="split" aria-labelledby="splitT">
+    <h2 id="splitT" class="sr" data-i18n="split.t">Mit oder ohne Audio-Interface</h2>
+    <div class="half">
+      <h3 data-i18n="s1.t">Du hast ein Audio-Interface?</h3>
+      <p data-i18n="s1.p">Fusion-X erkennt Geräte von Focusrite, Universal Audio, Behringer, PreSonus, Steinberg, Audient, MOTU, RME, Native Instruments, GoXLR und vielen mehr. Gain, 48 V und Direct Monitor bleiben am Gerät, Klang, Effekte und App-Lautstärken regelst du hier. ASIO-Treiber werden erkannt, und unterschiedliche Abtastraten meldet die App, bevor es knackst.</p>
+    </div>
+    <div class="half">
+      <h3 data-i18n="s2.t">Nur Headset oder Laptop?</h3>
+      <p data-i18n="s2.p">Genau dafür ist Fusion-X gemacht. Headset, USB-Mikro, Webcam, Laptop-Mikro oder Bluetooth: Die App erkennt, was du hast, gibt passende Tipps und hebt einen zu leisen Windows-Pegel selbst an. Die KI holt aus jedem Mikro eine klare Stimme raus.</p>
+    </div>
+  </section>
+
+  <!-- ================= Galerie ================= -->
+  <section class="gallery" id="galerie" aria-labelledby="galT">
+    <div class="sechead">
+      <h2 id="galT" data-i18n="gal.t">So sieht Fusion-X aus</h2>
+      <p data-i18n="gal.p">Klick auf ein Bild für die große Ansicht.</p>
+    </div>
+    <div class="shots">
+      <button class="shot wide" data-full="img/streammix.webp"><img src="img/streammix.webp" alt="Mixer mit Stream-Mix" loading="lazy" width="1600" height="1000"><span data-i18n="g.sm">Mixer mit Stream-Mix</span></button>
+      <button class="shot" data-full="img/mikrofon.webp"><img src="img/mikrofon.webp" alt="Mikrofon-Seite" loading="lazy" width="1600" height="1000"><span data-i18n="g.mic">Stimme und Effekte</span></button>
+      <button class="shot" data-full="img/equalizer.webp"><img src="img/equalizer.webp" alt="Equalizer" loading="lazy" width="1600" height="1000"><span data-i18n="g.eq">Equalizer für den ganzen PC</span></button>
+      <button class="shot" data-full="img/soundboard.webp"><img src="img/soundboard.webp" alt="Soundboard" loading="lazy" width="1600" height="1000"><span data-i18n="g.sb">Soundboard</span></button>
+      <button class="shot" data-full="img/sprechtaste.webp"><img src="img/sprechtaste.webp" alt="Sprechtaste" loading="lazy" width="1600" height="1000"><span data-i18n="g.ptt">Sprechtaste</span></button>
+      <button class="shot" data-full="img/geraete.webp"><img src="img/geraete.webp" alt="Geräte" loading="lazy" width="1600" height="1000"><span data-i18n="g.dev">Geräte und Lieblingsgeräte</span></button>
+      <button class="shot" data-full="img/profile.webp"><img src="img/profile.webp" alt="Profile" loading="lazy" width="1600" height="1000"><span data-i18n="g.prof">Profile</span></button>
+      <button class="shot" data-full="img/mikrocheck.webp"><img src="img/mikrocheck.webp" alt="Mikro-Check" loading="lazy" width="1600" height="1000"><span data-i18n="g.check">Mikro-Check</span></button>
+      <button class="shot" data-full="img/english.webp"><img src="img/english.webp" alt="Englische Oberfläche" loading="lazy" width="1600" height="1000"><span data-i18n="g.en">Auch auf Englisch</span></button>
+    </div>
+  </section>
+
+  <!-- ================= Installation ================= -->
+  <section class="install" aria-labelledby="instT">
+    <div class="sechead"><h2 id="instT" data-i18n="inst.t">In drei Minuten startklar</h2></div>
+    <ol class="inst">
+      <li><b data-i18n="i1.t">Herunterladen</b><span data-i18n="i1.p">Den Installer für Windows laden. Rund 95 MB, kostenlos.</span></li>
+      <li><b data-i18n="i2.t">Installer starten</b><span data-i18n="i2.p">Zeigt Windows „Der Computer wurde geschützt“, auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken.</span></li>
+      <li><b data-i18n="i3.t">Assistent folgen</b><span data-i18n="i3.p">Fusion-X erkennt deine Geräte und richtet Stimme, Lautstärken und das virtuelle Mikro in etwa einer Minute ein.</span></li>
+    </ol>
+  </section>
+
+  <!-- ================= Download ================= -->
+  <section class="download" id="download" aria-labelledby="dlT">
+    <div class="dlcard">
+      <img class="dlx" src="img/emblem.webp" alt="" width="120" height="120">
+      <div class="dlmain">
+        <h2 id="dlT" data-i18n="dl.t">Fusion-X Audio für Windows</h2>
+        <p class="dlmeta"><span data-ver2 data-i18n="dl.latest">Neueste Version</span><span data-size></span><span data-date></span></p>
+        <a class="btn big primary dl" href="https://github.com/lMXLama/fusionx-audio/releases/latest" data-dl>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg>
+          <span><b data-i18n="dl.btn">Kostenlos herunterladen</b><small data-i18n="dl.small">Installer für Windows 10 und 11 (64 Bit)</small></span>
+        </a>
+        <p class="small"><a href="https://github.com/lMXLama/fusionx-audio/releases" data-i18n="dl.all">Alle Versionen und Änderungen auf GitHub</a></p>
+      </div>
+      <div class="dlside">
+        <h3 data-i18n="dl.new">Neu in dieser Version</h3>
+        <ul id="changes"><li data-i18n="dl.loading">Wird geladen …</li></ul>
+        <h3 data-i18n="dl.req">Du brauchst</h3>
+        <ul>
+          <li data-i18n="r1">Windows 10 (ab Version 1903) oder Windows 11, 64 Bit</li>
+          <li data-i18n="r2">Für den Stream-Mix: OBS Studio ab Version 28</li>
+          <li data-i18n="r3">Für den Equalizer: Equalizer APO (kostenlos, die App führt dich hin)</li>
+          <li data-i18n="r4">Das Stream-Deck-Plugin ist in der App enthalten</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="faq" id="faq" aria-labelledby="faqT">
+    <div class="sechead"><h2 id="faqT" data-i18n="faq.t">Häufige Fragen</h2></div>
+    <div class="qa">
+      <details><summary data-i18n="q1">Ist Fusion-X wirklich kostenlos?</summary><p data-i18n="a1">Ja. Kein Abo, keine Werbung, kein Konto. Der Quellcode liegt offen auf GitHub.</p></details>
+      <details><summary data-i18n="q2">Windows warnt beim Installieren. Ist das gefährlich?</summary><p data-i18n="a2">Nein. Windows warnt bei jedem Programm, das noch keine teure digitale Signatur hat. Klick auf „Weitere Informationen“ und dann „Trotzdem ausführen“. Was die App macht, kannst du im offenen Quellcode auf GitHub nachlesen.</p></details>
+      <details><summary data-i18n="q3">Brauche ich ein Audio-Interface?</summary><p data-i18n="a3">Nein. Fusion-X funktioniert mit jedem Mikro und Headset, auch mit dem eingebauten Laptop-Mikro. Mit Interface bekommst du zusätzlich Kanalwahl und Interface-Tipps.</p></details>
+      <details><summary data-i18n="q4">Hören Discord und OBS meine bearbeitete Stimme?</summary><p data-i18n="a4">Ja. Dafür nutzt Fusion-X ein virtuelles Mikrofon (VB-CABLE von VB-Audio, Donationware). Die App lädt und installiert es beim ersten Start für dich. In Discord und OBS musst du nichts umstellen.</p></details>
+      <details><summary data-i18n="q5">Wie funktioniert der Stream-Mix?</summary><p data-i18n="a5">In OBS (ab Version 28) unter Werkzeuge den WebSocket-Server einschalten und das Passwort in Fusion-X einfügen. Fusion-X legt in OBS für jede App eine eigene Audioquelle an und regelt sie mit dem rechten Regler. Das normale Desktop-Audio wird dabei stummgeschaltet, damit nichts doppelt ist.</p></details>
+      <details><summary data-i18n="q6">Wie bekomme ich den Equalizer?</summary><p data-i18n="a6">Er nutzt das kostenlose Equalizer APO. Auf der Seite „Equalizer“ in der App auf „Herunterladen“ klicken, beim Installieren Kopfhörer und Lautsprecher anhaken, PC neu starten. Danach steuert Fusion-X alles.</p></details>
+      <details><summary data-i18n="q7">Gibt es Fusion-X für Mac oder Linux?</summary><p data-i18n="a7">Nein, im Moment nur für Windows 10 und 11.</p></details>
+      <details><summary data-i18n="q8">Etwas funktioniert nicht. Was tun?</summary><p data-i18n="a8">In der App unter Einstellungen auf „Diagnose kopieren“ klicken und den Text an maxilama67@gmail.com schicken. Dann sehe ich genau, woran es liegt.</p></details>
+    </div>
+  </section>
+
+  <!-- ================= Kontakt ================= -->
+  <section class="contact" id="kontakt" aria-labelledby="ctT">
+    <div class="sechead">
+      <h2 id="ctT" data-i18n="ct.t">Fragen, Probleme oder Ideen?</h2>
+      <p data-i18n="ct.p">Schreib mir. Fehlerberichte und Wünsche landen direkt in der nächsten Version.</p>
+    </div>
+    <div class="ctrow">
+      <a class="ct mail" href="mailto:maxilama67@gmail.com?subject=Fusion-X%20Audio">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5l8.5 6 8.5-6"/></svg>
+        <span><b data-i18n="ct.mail">E-Mail bei Problemen</b><small>maxilama67@gmail.com</small></span>
+      </a>
+      <a class="ct insta" href="https://www.instagram.com/_maxilama/" rel="noopener" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".9" fill="currentColor" stroke="none"/></svg>
+        <span><b>Instagram</b><small>@_maxilama</small></span>
+      </a>
+      <a class="ct twitch" href="https://www.twitch.tv/l_mx_" rel="noopener" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h15v10l-4 4h-4l-3 3H7v-3H4V6z"/><path d="M11 8v4M16 8v4"/></svg>
+        <span><b>Twitch</b><small>L_MX_</small></span>
+      </a>
+      <a class="ct gh" href="https://github.com/lMXLama/fusionx-audio" rel="noopener" target="_blank">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4 1.3-4-2-6-2.5M15 21v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+        <span><b>GitHub</b><small data-i18n="ct.gh">Quellcode und Versionen</small></span>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="fbrand"><img src="img/emblem.webp" alt="" width="28" height="28"><span>Fusion-X Audio <small data-i18n="f.by">von L_MX_</small></span></div>
+  <nav aria-label="Rechtliches und Links">
+    <a href="datenschutz.html" data-i18n="f.privacy">Datenschutz</a>
+    <a href="https://github.com/lMXLama/fusionx-audio/releases" data-i18n="f.rel">Versionen</a>
+    <a href="mailto:maxilama67@gmail.com" data-i18n="f.contact">Kontakt</a>
+  </nav>
+  <p class="fine" data-i18n="f.fine">© 2026 L_MX_. Discord, OBS, Spotify, Stream Deck und alle anderen genannten Namen sind Marken ihrer jeweiligen Inhaber. VB-CABLE ist ein Produkt von VB-Audio, Equalizer APO ein Open-Source-Projekt von Jonas Thedering.</p>
+</footer>
+
+<dialog class="lightbox" id="lightbox" aria-label="Großansicht">
+  <img alt="" id="lbImg">
+  <button class="lbclose" id="lbClose" type="button" aria-label="Schließen">×</button>
+</dialog>
+
+<script src="site.js"></script>
+</body>
+</html>
