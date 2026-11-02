@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Fusion-X Einstellungen</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 4px 12px 16px; background: #2d2d2d; color: #d8d8d8; font: 13px/1.4 "Segoe UI", -apple-system, Helvetica, sans-serif; }
+  .item { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center; margin: 8px 0; }
+  .item label { color: #9a9a9a; text-align: right; }
+  select { width: 100%; background: #3d3d3d; color: #d8d8d8; border: 1px solid #4a4a4a; border-radius: 4px; padding: 5px 6px; font: inherit; }
+  select:focus { outline: 1px solid #2ee6d6; }
+  .status { display: flex; align-items: center; gap: 8px; margin: 6px 0 10px; padding: 7px 10px; border-radius: 6px; background: #252525; font-size: 12px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #777; flex: none; }
+  .ok .dot { background: #3ddc84; }
+  .bad .dot { background: #ff5a5a; }
+  .hint { color: #9a9a9a; font-size: 12px; margin: 10px 0 0 106px; }
+</style>
+</head>
+<body>
+<div class="status" id="status"><span class="dot"></span><span id="statusText">Verbinde mit Fusion-X …</span></div>
+<div id="form"></div>
+<script src="../plugin/shared.js"></script>
+<script src="pi.js"></script>
+</body>
+</html>

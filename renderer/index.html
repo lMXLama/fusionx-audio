@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' app:; script-src 'self' app: 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' app:; img-src 'self' app: data: blob:; media-src 'self' app: blob: mediastream:; font-src 'self' app: data:; connect-src 'self' app:; worker-src 'self' app: blob:">
+<title>Fusion-X Audio</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="app" id="app">
+  <aside class="rail" aria-label="Navigation">
+    <img class="logo" src="brand/emblem.png" alt="Fusion-X Audio">
+    <nav id="nav" style="display:contents"></nav>
+    <div class="grow"></div>
+    <button class="micbtn" id="micBtn" aria-pressed="false" aria-label="Mikrofon stummschalten"><span class="ring"></span><span id="micIco"></span></button>
+    <div class="miclbl" id="micLbl">Mikro an</div>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <div class="ttl"><h1 id="pageTitle">Mixer</h1><span class="sub" id="pageSub"></span></div>
+      <canvas id="liveWave" width="220" height="34" title="Live: Ton deines PCs (türkis) und deine Stimme (blau)" aria-hidden="true"></canvas>
+      <div id="topRight" class="row" style="flex-wrap:nowrap"></div>
+    </header>
+    <div class="content" id="content"><div class="page" id="view"></div></div>
+  </div>
+</div>
+<div id="modal"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="i18n-en.js"></script>
+<script src="i18n.js"></script>
+<script src="mock.js"></script>
+<script src="classify.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

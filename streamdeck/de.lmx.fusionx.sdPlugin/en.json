@@ -1,0 +1,40 @@
+{
+  "Description": "Controls Fusion-X Audio: mute mic, app volumes, stream mix, profiles, sound presets, noise suppression, output device and soundboard – with live display and dials.",
+  "Localization": {},
+  "de.lmx.fusionx.mute": {
+    "Name": "Mute mic",
+    "Tooltip": "Mute and unmute your microphone"
+  },
+  "de.lmx.fusionx.volume": {
+    "Name": "Volume",
+    "Tooltip": "Volume of an app, category, the output or your voice – for you or the stream mix"
+  },
+  "de.lmx.fusionx.profile": {
+    "Name": "Profile",
+    "Tooltip": "Switch to a Fusion-X profile"
+  },
+  "de.lmx.fusionx.preset": {
+    "Name": "Sound preset",
+    "Tooltip": "Switch your voice to a sound preset"
+  },
+  "de.lmx.fusionx.ducking": {
+    "Name": "Lower while talking",
+    "Tooltip": "Automatic lowering on/off"
+  },
+  "de.lmx.fusionx.denoise": {
+    "Name": "Noise suppression",
+    "Tooltip": "Cycle or pick noise suppression"
+  },
+  "de.lmx.fusionx.output": {
+    "Name": "Output device",
+    "Tooltip": "Switch between headphones and speakers"
+  },
+  "de.lmx.fusionx.monitor": {
+    "Name": "Monitoring",
+    "Tooltip": "Hear yourself on/off"
+  },
+  "de.lmx.fusionx.sound": {
+    "Name": "Play sound",
+    "Tooltip": "Play a sound from the Fusion-X soundboard"
+  }
+}

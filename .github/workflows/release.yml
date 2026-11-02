@@ -1,0 +1,27 @@
+# Baut den Windows-Installer und veröffentlicht ihn als GitHub-Release.
+# Auslöser: ein Tag wie v1.1.1 (oder von Hand unter "Actions → Release → Run workflow").
+# Die installierten Fusion-X-Apps finden das Release danach automatisch als Update.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Installer bauen und als Release hochladen
+        run: npx electron-builder --win nsis --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

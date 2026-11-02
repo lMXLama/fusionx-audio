@@ -1,0 +1,77 @@
+{
+  "name": "fusionx-audio",
+  "productName": "Fusion-X Audio",
+  "version": "1.1.0",
+  "description": "Sound-Zentrale für Windows: App-Lautstärken, Mikrofon-Effekte, Geräte und Audio-Interfaces an einem Ort.",
+  "author": "L_MX_",
+  "license": "UNLICENSED",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --publish never",
+    "build-helper": "node scripts/build-helper.js",
+    "pack-streamdeck": "cd streamdeck && tar --format=zip -cf Fusion-X.streamDeckPlugin de.lmx.fusionx.sdPlugin",
+    "release": "electron-builder --win nsis --publish always"
+  },
+  "devDependencies": {
+    "electron": "39.8.10",
+    "electron-builder": "26.0.12"
+  },
+  "build": {
+    "appId": "de.lmx.fusionx.audio",
+    "productName": "Fusion-X Audio",
+    "copyright": "© L_MX_",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "backend/**",
+      "renderer/**",
+      "native/**",
+      "assets/**",
+      "streamdeck/*.streamDeckPlugin"
+    ],
+    "asarUnpack": [
+      "native/**",
+      "streamdeck/*.streamDeckPlugin"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "Fusion-X Audio",
+      "language": "1031"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "lMXLama",
+        "repo": "fusionx-audio",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "6.6.2",
+    "ws": "8.18.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lMXLama/fusionx-audio.git"
+  }
+}

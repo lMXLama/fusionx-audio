@@ -1,0 +1,190 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "UUID": "de.lmx.fusionx",
+  "Name": "Fusion-X Audio",
+  "Version": "1.2.0.0",
+  "Author": "L_MX_",
+  "Description": "Steuert Fusion-X Audio: Mikro stumm, App-Lautstärken, Profile, Klang-Vorlagen, Rauschunterdrückung, Ausgabegerät und Soundboard – mit Live-Anzeige und Drehreglern.",
+  "Category": "Fusion-X Audio",
+  "CategoryIcon": "imgs/category",
+  "Icon": "imgs/plugin",
+  "CodePath": "plugin/index.html",
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.4"
+  },
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Actions": [
+    {
+      "UUID": "de.lmx.fusionx.mute",
+      "Name": "Mikro stumm",
+      "Tooltip": "Mikrofon stumm schalten und wieder an",
+      "Icon": "imgs/actions/mic",
+      "States": [
+        {
+          "Image": "imgs/keys/mute-on"
+        },
+        {
+          "Image": "imgs/keys/mute-off"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "de.lmx.fusionx.volume",
+      "Name": "Lautstärke",
+      "Tooltip": "Lautstärke einer App, Kategorie, der Ausgabe oder deiner Stimme – für dich oder den Stream-Mix",
+      "Icon": "imgs/actions/volume",
+      "States": [
+        {
+          "Image": "imgs/keys/volume"
+        }
+      ],
+      "Controllers": [
+        "Keypad",
+        "Encoder"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "SupportedInMultiActions": true,
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Lautstärke",
+          "Push": "Stumm an/aus",
+          "Touch": "Stumm an/aus"
+        }
+      }
+    },
+    {
+      "UUID": "de.lmx.fusionx.profile",
+      "Name": "Profil",
+      "Tooltip": "Zu einem Fusion-X-Profil wechseln",
+      "Icon": "imgs/actions/profile",
+      "States": [
+        {
+          "Image": "imgs/keys/profile"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "de.lmx.fusionx.preset",
+      "Name": "Klang-Vorlage",
+      "Tooltip": "Stimme auf eine Klang-Vorlage umschalten",
+      "Icon": "imgs/actions/preset",
+      "States": [
+        {
+          "Image": "imgs/keys/preset"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "de.lmx.fusionx.ducking",
+      "Name": "Beim Sprechen leiser",
+      "Tooltip": "Automatisches Leiserstellen an/aus",
+      "Icon": "imgs/actions/ducking",
+      "States": [
+        {
+          "Image": "imgs/keys/ducking-on"
+        },
+        {
+          "Image": "imgs/keys/ducking-off"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "de.lmx.fusionx.denoise",
+      "Name": "Rauschunterdrückung",
+      "Tooltip": "Rauschunterdrückung durchschalten oder fest wählen",
+      "Icon": "imgs/actions/denoise",
+      "States": [
+        {
+          "Image": "imgs/keys/denoise"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "de.lmx.fusionx.output",
+      "Name": "Ausgabegerät",
+      "Tooltip": "Zwischen Kopfhörer und Lautsprecher wechseln",
+      "Icon": "imgs/actions/output",
+      "States": [
+        {
+          "Image": "imgs/keys/output"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "de.lmx.fusionx.monitor",
+      "Name": "Mithören",
+      "Tooltip": "Dich selbst hören an/aus",
+      "Icon": "imgs/actions/monitor",
+      "States": [
+        {
+          "Image": "imgs/keys/monitor-on"
+        },
+        {
+          "Image": "imgs/keys/monitor-off"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "de.lmx.fusionx.sound",
+      "Name": "Sound abspielen",
+      "Tooltip": "Einen Sound aus dem Fusion-X-Soundboard abspielen",
+      "Icon": "imgs/actions/sound",
+      "States": [
+        {
+          "Image": "imgs/keys/sound"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "PropertyInspectorPath": "pi/index.html",
+      "SupportedInMultiActions": true
+    }
+  ]
+}
