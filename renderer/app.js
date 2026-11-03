@@ -1388,9 +1388,9 @@
           return '<li><span class="wntag ' + it[0] + '">' + LBL[it[0]] + '</span><span>' + esc(it[1]) + '</span></li>';
         }).join('') + '</ul>';
       }).join('') +
-      '<p class="small muted" style="margin:4px 0 0">Probleme oder Ideen? Schreib an <a href="mailto:maxilama67@gmail.com">maxilama67@gmail.com</a></p>' +
-      '<div class="foot"><span></span><button class="btn primary" data-close>Alles klar</button></div>', 'whatsnew');
+      '<div class="foot"><button class="btn ghost" id="wnReport">' + ic('bell', 'sm') + 'Problem melden</button><button class="btn primary" data-close>Alles klar</button></div>', 'whatsnew');
     $('[data-close]', dlg).onclick = closeModal;
+    $('#wnReport', dlg).onclick = function () { closeModal(); openReport(); };
   }
   function checkWhatsNew() {
     var st = S.settings, seen = st.lastSeenVersion;
@@ -1576,7 +1576,9 @@
         srow('Ausgabegerät pro App', 'Lässt Apps über unterschiedliche Geräte spielen.', '<span class="badge ' + (S.backend.info && S.backend.info.appOutput ? 'ok' : '') + '">' + (S.backend.info && S.backend.info.appOutput ? 'Verfügbar' : 'Nicht verfügbar') + '</span>') +
         srow('ASIO-Treiber', esc(S.asio.length ? S.asio.join(', ') : 'Keine gefunden'), '') +
         srow('Einrichtung', 'Den Einrichtungs-Assistenten noch einmal durchgehen.', '<button class="btn sm" data-act="wizard">Starten</button>') +
-        srow('Problem melden', 'Kopiert alle technischen Infos, damit du sie weitergeben kannst.', '<button class="btn sm" data-act="diagCopy">Diagnose kopieren</button>') +
+        srow('Problem melden', 'Fehler, Frage oder Idee direkt an den Entwickler schicken.', '<button class="btn sm primary" data-act="report">' + ic('bell', 'sm') + 'Problem melden</button>') +
+        ((S.community || {}).invite ? srow('Discord-Community', 'Hilfe, Neuigkeiten und Austausch mit anderen Nutzern.', '<button class="btn sm" data-act="discord">' + ic('ext', 'sm') + 'Discord öffnen</button>') : '') +
+        srow('Diagnose kopieren', 'Kopiert alle technischen Infos, damit du sie weitergeben kannst.', '<button class="btn sm" data-act="diagCopy">Diagnose kopieren</button>') +
         '<div style="margin-top:10px"><span class="eyebrow">Ereignisse</span><pre class="log" id="logBox" style="margin-top:6px">' + esc(S.log.join('\n') || 'Noch nichts passiert.') + '</pre></div>' +
       '</div></section>' +
       '</div>';
@@ -1901,6 +1903,8 @@
       case 'smConnect': { var pw = $('#smPass'), po = $('#smPort'); st.streamMix.obs.password = pw ? pw.value : st.streamMix.obs.password; st.streamMix.obs.port = po ? (+po.value || 4455) : st.streamMix.obs.port; save(); smConnect(); break; }
       case 'smSetup': smSetupDialog(); break;
       case 'whatsNew': showWhatsNew(null); break;
+      case 'report': openReport(); break;
+      case 'discord': if (S.community && S.community.invite) fx.openExternal(S.community.invite); break;
       case 'updCheck': if (fx.update) onUpdate(await fx.update('check')); break;
       case 'updDownload': if (fx.update) onUpdate(await fx.update('download')); break;
       case 'updInstall': if (fx.update) fx.update('install'); break;
@@ -2399,6 +2403,7 @@
     var st = S.settings, mic = st.mic;
     switch (a.action) {
       case 'toggleMute': setMute(!mic.muted); break;
+      case 'report': openReport(); break;
       case 'setMute': setMute(!!a.value); break;
       case 'toggleDucking': toggleDucking(a.value); break;
       case 'profile': {
@@ -2534,7 +2539,7 @@
       '</div>';
   }
 
-  async function copyDiagnose() {
+  async function buildDiag() {
     var d = {};
     try { d = fx.diag ? await fx.diag() : { platform: 'Browser-Vorschau' }; } catch (e) { d = { fehler: e.message }; }
     var lines = [
@@ -2547,9 +2552,38 @@
       'Stream Deck: ' + (d.remote ? d.remote.clients + ' verbunden' + (d.remote.error ? ' – ' + d.remote.error : '') : '-'),
       '', 'Ereignisse:', S.log.join('\n'), '', 'Helfer-Log:', (d.log || []).join('\n')
     ];
-    var text = lines.join('\n');
+    return lines.join('\n');
+  }
+  async function copyDiagnose() {
+    var text = await buildDiag();
     try { if (fx.copyText) await fx.copyText(text); else await navigator.clipboard.writeText(text); toast('Diagnose kopiert. Füge sie einfach in deine Nachricht ein.'); }
     catch (_) { var box = $('#logBox'); if (box) { box.textContent = text; toast('Diagnose steht unten im Feld „Ereignisse“. Markieren und kopieren.'); } }
+  }
+
+  // ------------------------------------------------------------------ Problem melden (landet im Discord-Forum)
+  function openReport(kind) {
+    var c = S.community || {}, draft = { kind: kind || 'bug' };
+    var dlg = modal('<h2>' + ic('bell') + 'Problem melden</h2>' +
+      '<p class="lead">' + (c.discord ? 'Deine Meldung landet direkt beim Entwickler im Fusion-X-Discord.' : 'Es öffnet sich dein E-Mail-Programm mit einer vorbereiteten Nachricht.') + '</p>' +
+      seg('repKind', [['bug', 'Fehler', 'warn'], ['question', 'Frage', 'info'], ['idea', 'Idee', 'sparkle']], draft.kind) +
+      '<label class="field" style="display:grid;gap:6px;margin-top:12px"><span class="eyebrow">Worum geht es?</span><input class="input" id="repTitle" maxlength="80" placeholder="z. B. Stummschalten geht nicht in Discord"></label>' +
+      '<label class="field" style="display:grid;gap:6px"><span class="eyebrow">Was ist passiert?</span><textarea class="input" id="repText" rows="5" maxlength="1500" placeholder="Was hast du gemacht, was hast du erwartet, was ist stattdessen passiert?"></textarea></label>' +
+      '<label class="field" style="display:grid;gap:6px"><span class="eyebrow">Discord-Name oder E-Mail (freiwillig, für Rückfragen)</span><input class="input" id="repContact" maxlength="100"></label>' +
+      srow('Technische Infos mitschicken', 'Version, Geräte- und App-Namen, Fehlermeldungen. Keine Aufnahmen, keine Dateien.', sw(true, 'id="repDiag"')) +
+      '<div class="foot"><button class="btn ghost" data-close>Abbrechen</button><button class="btn primary" id="repSend">' + ic('upload', 'sm') + 'Senden</button></div>', 'report');
+    $$('[data-seg="repKind"]', dlg).forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); draft.kind = b.dataset.val; $$('[data-seg="repKind"]', dlg).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); }; });
+    $('#repDiag', dlg).onclick = function () { this.setAttribute('aria-checked', this.getAttribute('aria-checked') !== 'true'); };
+    $('[data-close]', dlg).onclick = closeModal;
+    setTimeout(function () { var t = $('#repTitle', dlg); if (t) t.focus(); }, 50);
+    $('#repSend', dlg).onclick = async function () {
+      var title = $('#repTitle', dlg).value.trim(), text = $('#repText', dlg).value.trim();
+      if (!title && !text) { toast('Schreib kurz, worum es geht.', true); return; }
+      var btn = this; btn.disabled = true; btn.textContent = 'Wird gesendet …';
+      var diag = $('#repDiag', dlg).getAttribute('aria-checked') === 'true' ? await buildDiag() : '';
+      var r = fx.report ? await fx.report({ kind: draft.kind, title: title, text: text, contact: $('#repContact', dlg).value.trim(), diag: diag }) : { ok: false, error: 'In der Vorschau nicht verfügbar' };
+      if (r && r.ok) { closeModal(); toast(r.via === 'discord' ? 'Danke! Deine Meldung ist angekommen.' : 'Danke! Schick die vorbereitete E-Mail jetzt noch ab.'); }
+      else { btn.disabled = false; btn.innerHTML = ic('upload', 'sm') + 'Senden'; toast((r && r.error) || 'Senden hat nicht geklappt.', true); }
+    };
   }
 
   // ------------------------------------------------------------------ Soundboard
@@ -2879,7 +2913,7 @@
   // ------------------------------------------------------------------ Start
   async function boot() {
     var init = await fx.init();
-    S.platform = init.platform; S.version = init.version; S.backend = init.backend || { ok: false }; S.autostart = init.autostart;
+    S.platform = init.platform; S.version = init.version; S.community = init.community || {}; S.backend = init.backend || { ok: false }; S.autostart = init.autostart;
     S.settings = deepMerge(DEFAULTS, init.settings || {});
     applyLang();
     // Engine bekommt immer die sparsame Fassung, wenn die bearbeitete Stimme gerade niemand hört

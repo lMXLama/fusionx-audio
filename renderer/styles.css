@@ -756,3 +756,4 @@ body.hiddenwin *, body.hiddenwin *::before, body.hiddenwin *::after { animation-
 .card { background: linear-gradient(180deg, rgba(255, 255, 255, .085), rgba(255, 255, 255, .035)); }
 .rail { background: linear-gradient(180deg, rgba(255, 255, 255, .095), rgba(255, 255, 255, .045)); }
 .dialog.whatsnew { max-height: calc(100vh - 48px); overflow-y: auto; }
+.dialog.report textarea.input { resize: vertical; min-height: 110px; font: inherit; line-height: 1.5; }

@@ -284,5 +284,15 @@ window.FX_EN = {
   "Automatische Updates und englische Oberfläche": "Automatic updates and English interface",
   "Von einem anderen Programm belegt. Klick und wähl eine andere Kombination.": "Already used by another program. Click and choose another combination.",
   "Ein anderes Programm nutzt sie schon. Unter Einstellungen kannst du andere festlegen.": "Another program already uses them. You can set different ones in Settings.",
-  "Tastenkürzel belegt:": "Shortcuts taken:"
+  "Tastenkürzel belegt:": "Shortcuts taken:",
+  "Deine Meldung landet direkt beim Entwickler im Fusion-X-Discord.": "Your report goes straight to the developer in the Fusion-X Discord.",
+  "Es öffnet sich dein E-Mail-Programm mit einer vorbereiteten Nachricht.": "Your email program opens with a prepared message.",
+  "Fehler": "Bug", "Frage": "Question", "Idee": "Idea", "Worum geht es?": "What is it about?", "z. B. Stummschalten geht nicht in Discord": "e.g. Mute doesn’t work in Discord",
+  "Was ist passiert?": "What happened?", "Was hast du gemacht, was hast du erwartet, was ist stattdessen passiert?": "What did you do, what did you expect, and what happened instead?",
+  "Discord-Name oder E-Mail (freiwillig, für Rückfragen)": "Discord name or email (optional, for follow-up questions)", "Technische Infos mitschicken": "Include technical info",
+  "Version, Geräte- und App-Namen, Fehlermeldungen. Keine Aufnahmen, keine Dateien.": "Version, device and app names, error messages. No recordings, no files.", "Senden": "Send", "Wird gesendet …": "Sending …",
+  "Schreib kurz, worum es geht.": "Briefly write what it’s about.", "Danke! Deine Meldung ist angekommen.": "Thanks! Your report has arrived.", "Danke! Schick die vorbereitete E-Mail jetzt noch ab.": "Thanks! Now just send the prepared email.",
+  "Senden hat nicht geklappt.": "Sending didn’t work.", "Fehler, Frage oder Idee direkt an den Entwickler schicken.": "Send a bug, question or idea straight to the developer.",
+  "Discord-Community": "Discord community", "Hilfe, Neuigkeiten und Austausch mit anderen Nutzern.": "Help, news and chat with other users.", "Discord öffnen": "Open Discord", "Diagnose kopieren": "Copy diagnostics",
+  "Bitte warte eine Minute bis zur nächsten Meldung.": "Please wait a minute before the next report.", "Keine Verbindung zu Discord:": "No connection to Discord:"
 };

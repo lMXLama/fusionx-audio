@@ -11,6 +11,37 @@ const { installVbCable } = require('./backend/vbcable');
 const { ObsClient } = require('./backend/obs');
 const eqapo = require('./backend/eqapo');
 const obs = new ObsClient();
+// Community: Discord-Einladung und Webhook für „Problem melden“ (in package.json unter "fusionx")
+const COMMUNITY = (() => { try { return require('./package.json').fusionx || {}; } catch (_) { return {}; } })();
+let lastReportAt = 0;
+async function sendReport(r) {
+  const now = Date.now();
+  if (now - lastReportAt < 60000) return { ok: false, error: 'Bitte warte eine Minute bis zur nächsten Meldung.' };
+  const kinds = { bug: '🐞 Bug', question: '❓ Frage', idea: '💡 Idee' };
+  const title = String(r.title || '').trim().slice(0, 80) || 'Ohne Titel';
+  const body = [
+    String(r.text || '').trim().slice(0, 1500) || '(keine Beschreibung)',
+    '',
+    '**Version:** ' + app.getVersion() + ' · ' + process.platform + ' ' + require('os').release(),
+    r.contact ? '**Kontakt:** ' + String(r.contact).slice(0, 100) : '**Kontakt:** keiner angegeben'
+  ].join('\n');
+  const hook = COMMUNITY.reportWebhook;
+  if (!hook) {
+    // Ohne Discord-Webhook: E-Mail-Programm mit vorbereiteter Nachricht öffnen
+    const mail = 'mailto:maxilama67@gmail.com?subject=' + encodeURIComponent('[Fusion-X ' + app.getVersion() + '] ' + (kinds[r.kind] || '') + ': ' + title) + '&body=' + encodeURIComponent(body.replace(/\*\*/g, '') + (r.diag ? '\n\n--- Technische Infos ---\n' + String(r.diag).slice(0, 1500) : ''));
+    shell.openExternal(mail);
+    return { ok: true, via: 'mail' };
+  }
+  try {
+    const fd = new FormData();
+    fd.append('payload_json', JSON.stringify({ thread_name: ((kinds[r.kind] || '') + ': ' + title).slice(0, 100), content: body.slice(0, 1990), username: 'Fusion-X Meldungen', allowed_mentions: { parse: [] } }));
+    if (r.diag) fd.append('files[0]', new Blob([String(r.diag).slice(0, 200000)], { type: 'text/plain' }), 'diagnose.txt');
+    const res = await fetch(hook + (hook.includes('?') ? '&' : '?') + 'wait=true', { method: 'POST', body: fd });
+    if (!res.ok) { logLine('Meldung: HTTP ' + res.status); return { ok: false, error: 'Discord hat die Meldung abgelehnt (' + res.status + ').' }; }
+    lastReportAt = now;
+    return { ok: true, via: 'discord' };
+  } catch (e) { return { ok: false, error: 'Keine Verbindung zu Discord: ' + e.message }; }
+}
 const helperLog = [];
 const logLine = (m) => { helperLog.push(new Date().toISOString().slice(11, 19) + '  ' + String(m).trim()); if (helperLog.length > 60) helperLog.shift(); };
 
@@ -185,7 +216,7 @@ function trayIcon() {
 // Kleine Übersetzung für Tray und Meldungen des Hauptprozesses
 const MAIN_EN = {
   'Mikrofon stumm': 'Microphone muted', 'Fusion-X Audio öffnen': 'Open Fusion-X Audio', 'Mikrofon einschalten': 'Unmute microphone', 'Mikrofon stummschalten': 'Mute microphone',
-  'Beim Sprechen leiser': 'Lower while talking', 'Profil': 'Profile', 'Keine Profile': 'No profiles', 'Beenden': 'Quit',
+  'Beim Sprechen leiser': 'Lower while talking', 'Profil': 'Profile', 'Keine Profile': 'No profiles', 'Beenden': 'Quit', 'Problem melden': 'Report a problem',
   'Gaming': 'Gaming', 'Streaming': 'Streaming', 'Meeting': 'Meeting', 'Musik & Filme': 'Music & movies',
   'Der Windows-Audio-Teil konnte nicht starten.': 'The Windows audio part couldn’t start.',
   'Mikrofon-Effekte funktionieren trotzdem. App-Lautstärken und Geräte lassen sich erst nach einem Neustart von Fusion-X steuern. Falls dein Virenscanner FusionAudioHelper.exe blockiert, erlaube die Datei bitte.': 'Microphone effects still work. App volumes and devices can only be controlled after restarting Fusion-X. If your antivirus blocks FusionAudioHelper.exe, please allow the file.'
@@ -207,6 +238,7 @@ function updateTray() {
     { label: L(trayState.muted ? 'Mikrofon einschalten' : 'Mikrofon stummschalten'), click: () => send('fx:tray', { action: 'toggleMute' }) },
     { label: L('Beim Sprechen leiser'), type: 'checkbox', checked: !!trayState.ducking, click: () => send('fx:tray', { action: 'toggleDucking' }) },
     { label: L('Profil'), submenu: profiles.length ? profiles : [{ label: L('Keine Profile'), enabled: false }] },
+    { label: L('Problem melden'), click: () => { showWindow(); send('fx:tray', { action: 'report' }); } },
     { type: 'separator' },
     { label: L('Beenden'), click: () => { quitting = true; app.quit(); } }
   ]));
@@ -262,6 +294,7 @@ function setupIpc() {
     settings,
     acrylic: useAcrylic(),
     visible: winVisible,
+    community: { invite: COMMUNITY.discordInvite || '', discord: !!COMMUNITY.reportWebhook },
     autostart: app.getLoginItemSettings().openAtLogin
   }));
   ipcMain.handle('fx:call', async (_e, cmd, args) => {
@@ -347,6 +380,7 @@ function setupIpc() {
   });
   // ---- Updates
   ipcMain.handle('fx:update', (_e, op, val) => updaterOp(op, val));
+  ipcMain.handle('fx:report', (_e, r) => sendReport(r || {}));
   ipcMain.handle('fx:window', (_e, action) => {
     if (action === 'hide') win.hide();
     if (action === 'quit') { quitting = true; app.quit(); }

@@ -76,5 +76,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/lMXLama/fusionx-audio.git"
+  },
+  "fusionx": {
+    "reportWebhook": "",
+    "discordInvite": ""
   }
 }
