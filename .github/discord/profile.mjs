@@ -10,7 +10,6 @@ const DESCRIPTION = [
   '🐞 Meldungen aus der App landen direkt beim Entwickler',
   '🆕 Jede neue Version sofort im Changelog',
   '',
-  '💬 Befehle: `/hilfe`',
   '⬇️ https://lmxlama.github.io/fusionx-audio/'
 ].join('\n');
 
