@@ -6,8 +6,8 @@ import { api, TOKEN, GUILD } from './lib.mjs';
 if (!TOKEN || !GUILD) { console.log('Kein Discord eingerichtet – überspringe.'); process.exit(0); }
 try {
   const channels = await api('GET', '/guilds/' + GUILD + '/channels');
-  const bugs = channels.find((c) => c.name === 'bug-reports');
-  const welcome = channels.find((c) => c.name === 'willkommen');
+  const bugs = channels.find((c) => c.name.includes('bug-reports'));
+  const welcome = channels.find((c) => c.name.includes('willkommen'));
   const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
   pkg.fusionx = pkg.fusionx || {};
   if (bugs) {
