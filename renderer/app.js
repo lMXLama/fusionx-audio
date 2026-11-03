@@ -1362,6 +1362,11 @@
 
   // ------------------------------------------------------------------ Was ist neu (nach jedem Update einmal)
   var CHANGELOG = [
+    { v: '1.2.1', items: [
+      ['new', 'Problem melden: Fehler, Fragen und Ideen direkt aus der App an den Entwickler schicken, auch über das Tray-Menü'],
+      ['new', 'Offizieller Discord-Server mit Hilfe, FAQ und allen Neuigkeiten. Beitreten in den Einstellungen'],
+      ['new', 'Diagnose kopieren: technische Infos mit einem Klick, falls du im Discord Hilfe suchst']
+    ] },
     { v: '1.2.0', items: [
       ['fix', 'Stummschalten wirkt jetzt überall: Discord & Co. hören dich nicht mehr, auch ohne virtuelles Mikro'],
       ['fast', 'Braucht deutlich weniger Leistung und Arbeitsspeicher, vor allem wenn Fusion-X im Tray läuft'],

@@ -1,12 +1,6 @@
-- Stummschalten wirkt jetzt überall: Discord & Co. hören dich nicht mehr, auch ohne virtuelles Mikro
-- Braucht deutlich weniger Leistung und Arbeitsspeicher, vor allem wenn Fusion-X im Tray läuft
-- Beim Sprechen leiser, Stumm-Erinnerung und Stream Deck laufen auch bei geschlossenem Fenster zuverlässig
-- Vorlage „Gaming“ nutzt die sparsame KI-Rauschunterdrückung, „KI Studio“ bleibt wählbar
-- Hinweis, wenn ein Tastenkürzel schon von einem anderen Programm belegt ist
-- Nach jedem Update zeigt ein Fenster, was neu ist
-- EN: Mute now works everywhere: Discord & co. no longer hear you, even without the virtual mic
-- EN: Uses much less CPU and memory, especially while Fusion-X runs in the tray
-- EN: Lower while talking, muted reminder and Stream Deck work reliably with the window closed
-- EN: The Gaming preset uses the lighter AI noise suppression, AI Studio is still available
-- EN: A notice when a shortcut is already used by another program
-- EN: After every update a window shows what's new
+- Problem melden: Fehler, Fragen und Ideen direkt aus der App an den Entwickler schicken, auch über das Tray-Menü
+- Offizieller Discord-Server mit Hilfe, FAQ und allen Neuigkeiten, beitreten in den Einstellungen
+- Diagnose kopieren: technische Infos mit einem Klick, falls du im Discord Hilfe suchst
+- EN: Report a problem: send bugs, questions and ideas straight from the app to the developer, also from the tray menu
+- EN: Official Discord server with help, FAQ and all the news, join from Settings
+- EN: Copy diagnostics: technical info in one click if you ask for help on Discord

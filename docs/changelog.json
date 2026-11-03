@@ -1,4 +1,16 @@
 {
+  "1.2.1": {
+    "de": [
+      "„Problem melden“: Fehler, Fragen und Ideen direkt aus der App senden",
+      "Offizieller Discord-Server, beitreten in den Einstellungen",
+      "„Diagnose kopieren“ für schnelle Hilfe im Discord"
+    ],
+    "en": [
+      "Report a problem: send bugs, questions and ideas straight from the app",
+      "Official Discord server, join from Settings",
+      "Copy diagnostics for quick help on Discord"
+    ]
+  },
   "1.2.0": {
     "de": [
       "Stummschalten wirkt jetzt überall, auch ohne virtuelles Mikro",

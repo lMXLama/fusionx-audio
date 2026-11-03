@@ -3,7 +3,17 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { api, TOKEN, GUILD } from './lib.mjs';
 
-if (!TOKEN || !GUILD) { console.log('Kein Discord eingerichtet – überspringe.'); process.exit(0); }
+if (!TOKEN || !GUILD) {
+  // Ohne Bot-Token wenigstens den Einladungslink einbauen
+  try {
+    const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+    pkg.fusionx = pkg.fusionx || {};
+    pkg.fusionx.discordInvite = JSON.parse(readFileSync('docs/community.json', 'utf8')).discord || pkg.fusionx.discordInvite;
+    writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+    console.log('Kein Bot-Token – nur Einladung eingebaut: ' + pkg.fusionx.discordInvite);
+  } catch (_) { console.log('Kein Discord eingerichtet – überspringe.'); }
+  process.exit(0);
+}
 try {
   const channels = await api('GET', '/guilds/' + GUILD + '/channels');
   const bugs = channels.find((c) => c.name.includes('bug-reports'));
