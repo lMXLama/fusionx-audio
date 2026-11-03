@@ -119,7 +119,11 @@ function createWindow() {
   });
   win.removeMenu();
   win.loadURL('app://fusionx/index.html');
-  win.once('ready-to-show', () => { if (!(START_HIDDEN || settings.startMinimized)) win.show(); });
+  winVisible = !(START_HIDDEN || settings.startMinimized);
+  win.once('ready-to-show', () => { if (winVisible) win.show(); });
+  // Sichtbarkeit an die Oberfläche melden: im Tray wird nichts gezeichnet und seltener abgefragt
+  const vis = () => { winVisible = win.isVisible() && !win.isMinimized(); send('fx:visible', winVisible); };
+  ['show', 'hide', 'minimize', 'restore'].forEach((ev) => win.on(ev, vis));
   win.on('close', (e) => {
     if (!quitting && settings.closeToTray !== false) { e.preventDefault(); win.hide(); return; }
     quitting = true;
@@ -138,7 +142,13 @@ function showWindow() {
 }
 
 // ------------------------------------------------------------------ Bildschirm-Anzeige (über Spielen und Apps)
-let osdWin = null, osdTimer = null;
+let osdWin = null, osdTimer = null, osdIdle = null;
+let winVisible = true;
+// Die Anzeige ist ein eigenes kleines Fenster. Nach 20 s ohne Einblendung wird es geschlossen, damit es keinen Speicher belegt.
+function osdIdleClose() {
+  clearTimeout(osdIdle);
+  osdIdle = setTimeout(() => { if (osdWin && !osdWin.isDestroyed() && !osdWin.isVisible()) { osdWin.destroy(); osdWin = null; } }, 20000);
+}
 function ensureOsd() {
   if (osdWin && !osdWin.isDestroyed()) return osdWin;
   osdWin = new BrowserWindow({
@@ -161,9 +171,10 @@ function showOsd(data) {
   const go = () => { w.webContents.send('fx:osd', data); w.showInactive(); };
   if (w.webContents.isLoading()) w.webContents.once('did-finish-load', go); else go();
   clearTimeout(osdTimer);
-  if (!data.sticky) osdTimer = setTimeout(() => { if (osdWin && !osdWin.isDestroyed()) { osdWin.webContents.send('fx:osd', { hide: true }); setTimeout(() => osdWin && !osdWin.isDestroyed() && osdWin.hide(), 260); } }, data.ms || 1600);
+  clearTimeout(osdIdle);
+  if (!data.sticky) osdTimer = setTimeout(hideOsd, data.ms || 1600);
 }
-function hideOsd() { clearTimeout(osdTimer); if (osdWin && !osdWin.isDestroyed()) { osdWin.webContents.send('fx:osd', { hide: true }); setTimeout(() => osdWin && !osdWin.isDestroyed() && osdWin.hide(), 260); } }
+function hideOsd() { clearTimeout(osdTimer); if (osdWin && !osdWin.isDestroyed()) { osdWin.webContents.send('fx:osd', { hide: true }); setTimeout(() => { if (osdWin && !osdWin.isDestroyed()) { osdWin.hide(); osdIdleClose(); } }, 260); } }
 
 // ------------------------------------------------------------------ Tray
 function trayIcon() {
@@ -225,7 +236,8 @@ function startPolling() {
     if (backend) {
       try { send('fx:state', await backend.call('poll', {})); } catch (_) {}
     }
-    setTimeout(pollState, 70);
+    // Sichtbar: 10× pro Sekunde für flüssige Pegel. Im Tray reichen 2× pro Sekunde (Ducking, Profile, Stream Deck).
+    setTimeout(pollState, winVisible ? 100 : 500);
   };
   const pollDevices = async () => {
     if (backend) {
@@ -249,6 +261,7 @@ function setupIpc() {
     backend: backend ? { ok: true, info: backendInfo } : { ok: false, error: backendError || 'Kein Audio-Backend' },
     settings,
     acrylic: useAcrylic(),
+    visible: winVisible,
     autostart: app.getLoginItemSettings().openAtLogin
   }));
   ipcMain.handle('fx:call', async (_e, cmd, args) => {
@@ -434,6 +447,15 @@ app.on('before-quit', async (e) => {
     app._restored = true;
     try { await backend.call('setDefault', { device: settings.originalMic, roles: 'all' }); } catch (_) {}
     settings.virtualMicActive = false;
+    try { fs.writeFileSync(settingsFile(), JSON.stringify(settings, null, 2)); } catch (_) {}
+    app.quit();
+    return;
+  }
+  if (backend && Array.isArray(settings.hardMuted) && settings.hardMuted.length && !app._unmuted) {
+    e.preventDefault();
+    app._unmuted = true;
+    for (const id of settings.hardMuted) { try { await backend.call('setDeviceMute', { device: id, muted: false }); } catch (_) {} }
+    settings.hardMuted = [];
     try { fs.writeFileSync(settingsFile(), JSON.stringify(settings, null, 2)); } catch (_) {}
     app.quit();
     return;

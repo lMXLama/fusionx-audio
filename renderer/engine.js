@@ -42,7 +42,7 @@
       hpf: { on: true, freq: 70 }, denoise: 'ai', gate: { on: true }, deess: { on: true, amount: 50 },
       eq: { low: { f: 110, g: 3 }, mid1: { f: 380, g: -3, q: 1.1 }, mid2: { f: 3200, g: 2.5, q: 0.9 }, high: { f: 10000, g: 3 } }, compAmount: 65 },
     gaming: { name: 'Gaming', desc: 'Stimme schneidet durch, Tastatur bleibt draußen',
-      hpf: { on: true, freq: 120 }, denoise: 'studio', gate: { on: true }, deess: { on: true, amount: 30 },
+      hpf: { on: true, freq: 120 }, denoise: 'ai', gate: { on: true }, deess: { on: true, amount: 30 },
       eq: { low: { f: 140, g: -2 }, mid1: { f: 400, g: -1, q: 1 }, mid2: { f: 2800, g: 3, q: 1 }, high: { f: 8000, g: 1 } }, compAmount: 55 },
     podcast: { name: 'Podcast warm', desc: 'Nah, warm und angenehm lange zuzuhören',
       hpf: { on: true, freq: 70 }, denoise: 'light', gate: { on: true }, deess: { on: true, amount: 45 },

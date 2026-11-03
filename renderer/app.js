@@ -163,6 +163,8 @@
     streamMix: { enabled: false, obs: { host: '127.0.0.1', port: 4455, password: '' }, master: 1, apps: {}, voice: { on: false, vol: 1 }, muteDesktop: true, desktopPrev: null, addToScenes: true, newAppsOn: true },
     eq: { enabled: false, preset: 'flat', bands: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
     lang: 'auto',
+    lastSeenVersion: '',
+    hardMuted: [],
     autoUpdate: true
   };
 
@@ -336,13 +338,32 @@
     if (restart) { if (S.settings.micEnabled) startEngine(); return; }
     S.engine.update(S.settings.mic, { monitorSinkId: monitorSink() });
   }
+  // Echte Mikrofone direkt in Windows stummschalten, wenn Apps sie ohne Fusion-X nutzen
+  // (kein virtuelles Mikro aktiv, oder z. B. Discord ist fest auf das echte Mikro gestellt).
+  function hardMuteTargets() {
+    var ids = {}, add = function (d) { if (d && d.flow === 'capture' && !d.cls.virtual) ids[d.id] = true; };
+    add(devById(S.settings.mic.inputId)); add(defaultCapture());
+    add(captures().filter(function (d) { return d.isDefaultComms; })[0]);
+    return Object.keys(ids);
+  }
+  function needsHardMute() {
+    if (!S.settings.virtualMicActive || S.engine.state !== 'on') return true;
+    return (S.captureApps || []).some(function (a) {
+      if (/fusion|electron/i.test(a.key)) return false;
+      return Object.keys(a.devices || {}).some(function (id) { var d = devById(id); return d && !d.cls.virtual; });
+    });
+  }
+  function setHardMute(on) {
+    var st = S.settings, list = on ? hardMuteTargets() : (st.hardMuted || []).slice();
+    if (on && !needsHardMute()) list = [];
+    list.forEach(function (id) { fx.call('setDeviceMute', { device: id, muted: !!on }).catch(function () {}); });
+    var next = on ? Array.from(new Set((st.hardMuted || []).concat(list))) : [];
+    if (JSON.stringify(next) !== JSON.stringify(st.hardMuted || [])) { st.hardMuted = next; save(); fx.saveSettings({ hardMuted: next }); }
+  }
   function setMute(on) {
     S.settings.mic.muted = !!on;
     micChanged();
-    if (S.engine.state !== 'on') {
-      var d = devById(S.settings.mic.inputId);
-      if (d) fx.call('setDeviceMute', { device: d.id, muted: !!on }).catch(function () {});
-    }
+    setHardMute(!!on);
     updateMicButton();
     fx.setTray({ muted: !!on });
     toast(on ? 'Mikrofon stumm' : 'Mikrofon an');
@@ -407,10 +428,7 @@
     var was = S.pttMutedNow;
     S.pttMutedNow = muted;
     S.engine.setPttMuted(muted);
-    if (S.engine.state !== 'on' && p.mode !== 'off') {
-      var d = devById(S.settings.mic.inputId);
-      if (d) fx.call('setDeviceMute', { device: d.id, muted: muted || !!S.settings.mic.muted }).catch(function () {});
-    }
+    if (p.mode !== 'off' || was) setHardMute(muted || !!S.settings.mic.muted);
     updateMicButton();
     if (silent || was === undefined) return;
     if (p.beep) cue(muted ? 'release' : 'talk');
@@ -746,6 +764,7 @@
 
   function go(page) {
     S.page = page;
+    setTimeout(applyEffectiveMic, 0);
     renderTop();
     renderPage();
     $('#content').scrollTop = 0;
@@ -1325,8 +1344,65 @@
     if (pre) { var p = peqPreamp(e.bands); pre.textContent = e.enabled && p ? 'Vorverstärkung ' + fmtDb(p) + ' (automatisch, damit nichts verzerrt)' : 'Kein Ausgleich nötig'; }
   }
 
+  // ------------------------------------------------------------------ Leistung sparen
+  // „KI Studio“ braucht viel Rechenleistung. Hört gerade niemand die bearbeitete Stimme
+  // (kein virtuelles Mikro, kein Mithören, Mikrofon-Seite zu), läuft stattdessen die sparsame KI.
+  function effectiveMic(mic) {
+    var used = S.settings.virtualMicActive || (mic.monitor && mic.monitor.on) || (S.page === 'mic' && !S.hidden) || S.checkRunning || S.testRecRunning;
+    return used || mic.denoise !== 'studio' ? mic : Object.assign({}, mic, { denoise: 'ai' });
+  }
+  function applyEffectiveMic() {
+    if (S.engine.state !== 'on') return;
+    var want = effectiveMic(S.settings.mic).denoise;
+    if (want !== S.engine.denoiseMode) S.engine.update(S.settings.mic);
+  }
+
   // ------------------------------------------------------------------ Sprache
   function applyLang() { if (window.FxI18n) FxI18n.set(S.settings.lang); }
+
+  // ------------------------------------------------------------------ Was ist neu (nach jedem Update einmal)
+  var CHANGELOG = [
+    { v: '1.2.0', items: [
+      ['fix', 'Stummschalten wirkt jetzt überall: Discord & Co. hören dich nicht mehr, auch ohne virtuelles Mikro'],
+      ['fast', 'Braucht deutlich weniger Leistung und Arbeitsspeicher, vor allem wenn Fusion-X im Tray läuft'],
+      ['fix', 'Beim Sprechen leiser, Stumm-Erinnerung und Stream Deck laufen auch bei geschlossenem Fenster zuverlässig'],
+      ['fast', 'Vorlage „Gaming“ nutzt jetzt die sparsame KI-Rauschunterdrückung. „KI Studio“ bleibt wählbar'],
+      ['new', 'Hinweis, wenn ein Tastenkürzel schon von einem anderen Programm belegt ist'],
+      ['new', 'Dieses Fenster: Nach jedem Update siehst du sofort, was neu ist']
+    ] },
+    { v: '1.1.1', items: [['fix', 'Navigation links lässt sich unter Windows wieder anklicken']] },
+    { v: '1.1.0', items: [
+      ['new', 'Stream-Mix: zweiter Regler pro App für deinen OBS-Stream'],
+      ['new', 'Equalizer für den ganzen PC-Sound mit 8 Vorlagen'],
+      ['new', 'Automatische Updates und englische Oberfläche']
+    ] }
+  ];
+  var vNum = function (v) { return String(v || '0').split('.').map(function (x) { return +x || 0; }).reduce(function (a, b) { return a * 1000 + b; }, 0); };
+  function showWhatsNew(sinceVersion) {
+    var list = CHANGELOG.filter(function (c) { return !sinceVersion || vNum(c.v) > vNum(sinceVersion); }).slice(0, 3);
+    if (!list.length) list = CHANGELOG.slice(0, 1);
+    var LBL = { new: 'Neu', fix: 'Behoben', fast: 'Schneller' };
+    var dlg = modal('<div class="wnhead"><img src="brand/emblem.png" alt="" width="54" height="54"><div><h2>Neu in Version ' + esc(list[0].v) + '</h2><p class="lead">Danke für euer Feedback! Das hat sich geändert:</p></div></div>' +
+      list.map(function (c, i) {
+        return (i ? '<h3 class="wnver">Version ' + esc(c.v) + '</h3>' : '') + '<ul class="wnlist">' + c.items.map(function (it) {
+          return '<li><span class="wntag ' + it[0] + '">' + LBL[it[0]] + '</span><span>' + esc(it[1]) + '</span></li>';
+        }).join('') + '</ul>';
+      }).join('') +
+      '<p class="small muted" style="margin:4px 0 0">Probleme oder Ideen? Schreib an <a href="mailto:maxilama67@gmail.com">maxilama67@gmail.com</a></p>' +
+      '<div class="foot"><span></span><button class="btn primary" data-close>Alles klar</button></div>', 'whatsnew');
+    $('[data-close]', dlg).onclick = closeModal;
+  }
+  function checkWhatsNew() {
+    var st = S.settings, seen = st.lastSeenVersion;
+    if (!S.version || S.demo) return;
+    if (!st.onboarded) { st.lastSeenVersion = S.version; save(); return; }
+    if (seen !== S.version) {
+      st.lastSeenVersion = S.version; save();
+      // Erst zeigen, wenn kein anderes Fenster (z. B. Assistent) offen ist
+      var tryShow = function (n) { if ($('#modal').innerHTML) { if (n < 20) setTimeout(function () { tryShow(n + 1); }, 1500); return; } showWhatsNew(seen || '1.1.1'); };
+      setTimeout(function () { tryShow(0); }, 900);
+    }
+  }
 
   // ------------------------------------------------------------------ Updates
   function updHtml() {
@@ -1342,7 +1418,7 @@
       case 'error': line = 'Update-Prüfung fehlgeschlagen: ' + esc(u.error || ''); btn = '<button class="btn sm" data-act="updCheck">' + ic('refresh', 'sm') + 'Erneut versuchen</button>'; break;
       default: line = 'Du hast die neueste Version.'; btn = u.enabled ? '<button class="btn sm" data-act="updCheck">' + ic('refresh', 'sm') + 'Jetzt prüfen</button>' : '';
     }
-    return srow('Fusion-X ' + esc(cur || ''), line, btn) +
+    return srow('Fusion-X ' + esc(cur || ''), line, btn + ' <button class="btn sm ghost" data-act="whatsNew">' + ic('sparkle', 'sm') + 'Was ist neu?</button>') +
       (u.enabled || u.state === 'unconfigured' || S.demo ? srow('Automatisch aktualisieren', 'Lädt neue Versionen im Hintergrund und installiert sie beim nächsten Beenden.', sw(st.autoUpdate, 'id="updAuto"')) : '');
   }
   function onUpdate(u) {
@@ -1486,7 +1562,8 @@
           return '<div><span class="eyebrow">' + grp[0] + '</span><div>' + grp[1].map(function (k) {
             var label = HOTKEY_LABELS[k];
             if (/^profile\d/.test(k)) { var p = st.profiles[+k.slice(-1) - 1]; if (!p) return ''; label = 'Profil „' + p.name + '“'; }
-            return srow(label, '', '<button class="keycap" data-hotkey="' + k + '">' + esc(prettyKey(st.hotkeys[k]) || 'Nicht belegt') + '</button>');
+            var busy = (S.hotkeyFailed || []).indexOf(k) >= 0;
+            return srow(label, busy ? 'Von einem anderen Programm belegt. Klick und wähl eine andere Kombination.' : '', '<button class="keycap' + (busy ? ' bad' : '') + '" data-hotkey="' + k + '">' + esc(prettyKey(st.hotkeys[k]) || 'Nicht belegt') + '</button>');
           }).join('') + '</div></div>';
         }).join('') + '</div></section>' +
       '<section class="card"><h2>' + ic('route') + 'Virtuelles Mikrofon</h2><p class="lead">Über dieses Gerät gibt Fusion-X deine bearbeitete Stimme an andere Apps weiter.</p><div style="margin-top:6px">' +
@@ -1823,6 +1900,7 @@
       case 'voiceStream': { var vo = st.streamMix.voice; vo.on = !vo.on; save(); renderStrips(); smTick(); if (vo.on && !st.virtualMicActive) toast('Tipp: Aktiviere auf der Mikrofon-Seite „Für alle Apps“, dann hört dein Stream deine bearbeitete Stimme.'); break; }
       case 'smConnect': { var pw = $('#smPass'), po = $('#smPort'); st.streamMix.obs.password = pw ? pw.value : st.streamMix.obs.password; st.streamMix.obs.port = po ? (+po.value || 4455) : st.streamMix.obs.port; save(); smConnect(); break; }
       case 'smSetup': smSetupDialog(); break;
+      case 'whatsNew': showWhatsNew(null); break;
       case 'updCheck': if (fx.update) onUpdate(await fx.update('check')); break;
       case 'updDownload': if (fx.update) onUpdate(await fx.update('download')); break;
       case 'updInstall': if (fx.update) fx.update('install'); break;
@@ -1974,7 +2052,8 @@
       btn.classList.remove('rec');
       btn.textContent = prettyKey(S.settings.hotkeys[k]) || 'Nicht belegt';
       save();
-      fx.setHotkeys(allHotkeys()).then(function (failed) {
+      syncHotkeys().then(function (failed) {
+        btn.classList.toggle('bad', !!(failed && failed.indexOf(k) >= 0));
         if (failed && failed.indexOf(k) >= 0) toast('Diese Kombination ist schon von einem anderen Programm belegt.', true);
       });
     }
@@ -2111,8 +2190,9 @@
     var dlg = modal('<h2>Testaufnahme</h2><p class="lead">Sprich 6 Sekunden, gern mit Tastatur-Tippen oder Lüfter im Hintergrund. Danach hörst du dich ohne und mit Fusion-X.</p>' +
       '<div id="trBody"><div class="bigstate"><div class="orb" id="trOrb">' + ic('rec', 'lg') + '</div><h3 id="trTitle">Bereit zur Aufnahme</h3></div><div class="progress"><i id="trBar"></i></div></div>' +
       '<div class="foot"><button class="btn ghost" data-close>Schließen</button><button class="btn amber" id="trGo">' + ic('rec', 'sm') + 'Aufnahme starten</button></div>', 'wide');
-    $('[data-close]', dlg).onclick = closeModal;
+    $('[data-close]', dlg).onclick = function () { S.testRecRunning = false; closeModal(); applyEffectiveMic(); };
     $('#trGo').onclick = async function () {
+      S.testRecRunning = true; applyEffectiveMic();
       if (S.engine.state !== 'on') await startEngine();
       if (S.engine.state !== 'on') { $('#trTitle').textContent = S.demo ? 'In der Vorschau gibt es keinen Mikrofonzugriff. In der installierten App hörst du hier dich selbst vorher und nachher.' : (S.engine.error || 'Das Mikrofon konnte nicht gestartet werden.'); return; }
       this.disabled = true;
@@ -2511,7 +2591,9 @@
     SB.sounds.forEach(function (x) { if (x.hotkey) m['sound:' + x.id] = x.hotkey; });
     return m;
   }
-  function syncHotkeys() { return fx.setHotkeys(allHotkeys()); }
+  function syncHotkeys() {
+    return Promise.resolve(fx.setHotkeys(allHotkeys())).then(function (failed) { S.hotkeyFailed = failed || []; return S.hotkeyFailed; });
+  }
   async function sbAddFiles(files) {
     var added = 0;
     for (var i = 0; i < files.length; i++) {
@@ -2669,15 +2751,35 @@
 
   // ------------------------------------------------------------------ Live-Anzeige
   var lastFrame = performance.now(), demoT = 0;
-  function frame(now) {
-    var dt = Math.min(100, now - lastFrame) / 1000;
-    lastFrame = now;
+  // Hintergrund-Logik (25× pro Sekunde): läuft auch, wenn das Fenster im Tray ist
+  var lastLogic = performance.now();
+  function logicTick() {
+    var now = performance.now(), dt = Math.min(200, now - lastLogic) / 1000;
+    lastLogic = now;
     var m = S.engine.meters();
     if (!m && S.demo) m = demoMeters(now);
     S.meters = m;
     var speaking = m && m.speaking;
     duckTick(!!speaking && !S.demo, now);
     if (S.demo) demoDuck(speaking, now);
+    if (now - (S.lastRemoteT || 0) > 200) { S.lastRemoteT = now; pushRemoteState(); }
+    if (m && S.settings.mic.muted && S.settings.osd.remind && m.input) {
+      if (m.input.rms > Math.max(S.settings.mic.gate.open, -52) + 3) S.remindAcc = (S.remindAcc || 0) + dt; else S.remindAcc = Math.max(0, (S.remindAcc || 0) - dt * 0.5);
+      if (S.remindAcc > 1.2 && now > (S.remindNext || 0)) {
+        S.remindNext = now + 15000; S.remindAcc = 0;
+        toast('Du sprichst, aber dein Mikro ist stumm.', true);
+        osd({ icon: 'micOff', tone: 'bad', title: 'Du bist stumm geschaltet', sub: S.settings.hotkeys.toggleMute ? prettyKey(S.settings.hotkeys.toggleMute) + ' zum Einschalten' : 'Klick auf den Mikro-Knopf zum Einschalten', ms: 2800 });
+        cue('mute');
+      }
+    }
+  }
+  // Zeichnen: höchstens 30× pro Sekunde und gar nicht, solange das Fenster zu ist
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (S.hidden || now - lastFrame < 32) return;
+    var dt = Math.min(100, now - lastFrame) / 1000;
+    lastFrame = now;
+    var m = S.meters, speaking = m && m.speaking;
     $('#micBtn').classList.toggle('talk', !!speaking && !S.settings.mic.muted);
 
     if (S.page === 'mixer' && refs.strips) {
@@ -2698,23 +2800,12 @@
       if (vc) vc.style.height = (100 - (m ? dbFrac(m.output.peak) : 0) * 100) + '%';
     }
     if (S.page === 'mic' && refs.mic && refs.mic.in) updateMicMeters(m, dt);
-    if (now - (S.lastRemoteT || 0) > 200) { S.lastRemoteT = now; pushRemoteState(); }
     drawLiveWave(now, m);
-    if (m && S.settings.mic.muted && S.settings.osd.remind && m.input) {
-      if (m.input.rms > Math.max(S.settings.mic.gate.open, -52) + 3) S.remindAcc = (S.remindAcc || 0) + dt; else S.remindAcc = Math.max(0, (S.remindAcc || 0) - dt * 0.5);
-      if (S.remindAcc > 1.2 && now > (S.remindNext || 0)) {
-        S.remindNext = now + 15000; S.remindAcc = 0;
-        toast('Du sprichst, aber dein Mikro ist stumm.', true);
-        osd({ icon: 'micOff', tone: 'bad', title: 'Du bist stumm geschaltet', sub: S.settings.hotkeys.toggleMute ? prettyKey(S.settings.hotkeys.toggleMute) + ' zum Einschalten' : 'Klick auf den Mikro-Knopf zum Einschalten', ms: 2800 });
-        cue('mute');
-      }
-    }
     if (S.page === 'sounds') Object.keys(SB.playing).forEach(function (id) {
       var e = SB.playing[id], bar = $('.pad[data-sound="' + id + '"] .padbar');
       if (bar && e.dur) bar.style.width = Math.min(100, (now - e.t0) / e.dur * 100) + '%';
     });
     if (S.page === 'devices' && refs.devMeters) refs.devMeters.forEach(function (r) { r.fill.style.width = linFrac(S.peaks[r.id] || 0) * 100 + '%'; });
-    requestAnimationFrame(frame);
   }
   function updateMicMeters(m, dt) {
     var R = refs.mic, pk = refs.micPk;
@@ -2791,6 +2882,12 @@
     S.platform = init.platform; S.version = init.version; S.backend = init.backend || { ok: false }; S.autostart = init.autostart;
     S.settings = deepMerge(DEFAULTS, init.settings || {});
     applyLang();
+    // Engine bekommt immer die sparsame Fassung, wenn die bearbeitete Stimme gerade niemand hört
+    (function () {
+      var eng = S.engine, up = eng.update.bind(eng), st = eng.start.bind(eng);
+      eng.update = function (mic, o) { return up(effectiveMic(mic), o); };
+      eng.start = function (mic, o) { return st(effectiveMic(mic), o); };
+    })();
     // Fehlende eingebaute Profile ergänzen
     PROFILES.forEach(function (p) { if (!S.settings.profiles.some(function (x) { return x.id === p.id; })) S.settings.profiles.push(clone(p)); });
     document.body.classList.toggle('win', S.platform === 'win32');
@@ -2808,7 +2905,10 @@
       document.addEventListener('keyup', function (e) { pttKey(CODE_VK[e.code] || e.keyCode, false); });
     }
     await sbLoad();
-    syncHotkeys();
+    syncHotkeys().then(function (failed) {
+      var main = (failed || []).filter(function (k) { return HOTKEY_LABELS[k]; });
+      if (main.length) setTimeout(function () { toast('Tastenkürzel belegt: ' + main.map(function (k) { return prettyKey(S.settings.hotkeys[k]); }).join(', ') + '. Ein anderes Programm nutzt sie schon. Unter Einstellungen kannst du andere festlegen.', true); }, 2500);
+    });
     pttWatch();
     fx.onTray(runAction);
     if (fx.onObs) fx.onObs(smOnObs);
@@ -2821,12 +2921,20 @@
     fx.onBackend(function (b) { S.backend = Object.assign({}, S.backend, b); if (S.page === 'mixer' || S.page === 'settings') renderPage(); });
     syncTrayProfiles();
     if (!S.settings.activeProfile && S.settings.useCase) S.settings.activeProfile = S.settings.useCase;
+    // Stummschaltung nach dem Start wiederherstellen bzw. Reste nach einem Absturz aufräumen
+    if (S.settings.mic.muted) setHardMute(true);
+    else if ((S.settings.hardMuted || []).length) setHardMute(false);
 
     var hash = (location.hash || '').slice(1);
     S.page = TITLES[hash] ? hash : 'mixer';
     renderTop();
     renderPage();
     requestAnimationFrame(frame);
+    setInterval(logicTick, 40);
+    setInterval(applyEffectiveMic, 1500);
+    S.hidden = init.visible === false;
+    document.body.classList.toggle('hiddenwin', S.hidden);
+    if (fx.onVisible) fx.onVisible(function (v) { S.hidden = !v; document.body.classList.toggle('hiddenwin', S.hidden); if (v) { renderTop(); renderPage(); } applyEffectiveMic(); });
     log('Fusion-X gestartet' + (S.backend.ok ? '' : ' (Windows-Audio nicht verbunden)'));
 
     if (S.settings.micEnabled && !S.demo) {
@@ -2835,6 +2943,7 @@
     }
     if (S.demo && !S.settings.activeProfile) { S.settings.activeProfile = 'gaming'; renderTop(); }
     if (!S.settings.onboarded && !S.demo) setTimeout(openWizard, 400);
+    checkWhatsNew();
     navigator.mediaDevices && navigator.mediaDevices.addEventListener && navigator.mediaDevices.addEventListener('devicechange', refreshBrowserDevices);
   }
 

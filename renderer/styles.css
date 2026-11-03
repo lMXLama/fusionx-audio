@@ -540,9 +540,9 @@ input[type=range].amber::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(108, 
 }
 .ambient { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .ambient i { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .55; }
-.ambient i:nth-child(1) { width: 46vw; height: 46vw; left: 48vw; top: -18vw; background: radial-gradient(circle, rgba(43, 140, 255, .55), transparent 65%); animation: drift1 38s ease-in-out infinite alternate; }
-.ambient i:nth-child(2) { width: 40vw; height: 40vw; left: -8vw; top: 46vh; background: radial-gradient(circle, rgba(46, 230, 214, .42), transparent 65%); animation: drift2 44s ease-in-out infinite alternate; }
-.ambient i:nth-child(3) { width: 30vw; height: 30vw; left: 30vw; top: 62vh; background: radial-gradient(circle, rgba(124, 108, 255, .32), transparent 65%); animation: drift3 52s ease-in-out infinite alternate; }
+.ambient i:nth-child(1) { width: 46vw; height: 46vw; left: 48vw; top: -18vw; background: radial-gradient(circle, rgba(43, 140, 255, .55), transparent 65%); }
+.ambient i:nth-child(2) { width: 40vw; height: 40vw; left: -8vw; top: 46vh; background: radial-gradient(circle, rgba(46, 230, 214, .42), transparent 65%); }
+.ambient i:nth-child(3) { width: 30vw; height: 30vw; left: 30vw; top: 62vh; background: radial-gradient(circle, rgba(124, 108, 255, .32), transparent 65%); }
 @keyframes drift1 { to { transform: translate(-12vw, 10vh) scale(1.1); } }
 @keyframes drift2 { to { transform: translate(10vw, -14vh) scale(1.15); } }
 @keyframes drift3 { to { transform: translate(-8vw, -10vh) scale(.9); } }
@@ -731,3 +731,28 @@ body:has(.demo-bar) .toast { bottom: 76px; }
 @media (max-width: 720px) { .peqband { width: 28px; } .peqband .vfader { width: 22px; } .peqband span { font-size: 9px; } }
 .peqpre .preset { max-width: none; flex: 1 1 calc(25% - 12px); }
 .updbar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.1); margin-top: 8px; overflow: hidden; } .updbar i { display: block; height: 100%; background: var(--grad, linear-gradient(90deg,#2b8cff,#2ee6d6)); border-radius: 3px; transition: width .3s; }
+
+/* Leistung: Hintergrund-Licht steht still (kein ständiges Neuzeichnen hinter den Glasflächen),
+   und bei geschlossenem Fenster pausieren alle Animationen */
+body.hiddenwin *, body.hiddenwin *::before, body.hiddenwin *::after { animation-play-state: paused !important; }
+
+/* ================= Was ist neu ================= */
+.dialog.whatsnew { max-width: 620px; }
+.wnhead { display: flex; gap: 16px; align-items: center; }
+.wnhead img { flex: none; filter: drop-shadow(0 0 16px rgba(46, 230, 214, .5)); border-radius: 14px; }
+.wnhead h2 { margin: 0 0 2px; }
+.wnver { font-size: 14px; color: var(--muted); margin: 14px 0 0; font-weight: 600; }
+.wnlist { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.wnlist li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; background: rgba(255, 255, 255, .045); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); font-size: 14.5px; line-height: 1.45; }
+.wntag { flex: none; font: 600 11.5px var(--f-display); padding: 3px 9px; border-radius: 999px; margin-top: 1px; min-width: 72px; text-align: center; }
+.wntag.new { color: #2ee6d6; background: rgba(46, 230, 214, .12); }
+.wntag.fix { color: #8fb2ff; background: rgba(143, 178, 255, .14); }
+.wntag.fast { color: #ffcf6a; background: rgba(255, 207, 106, .12); }
+.keycap.bad { color: #ff9a9a; box-shadow: inset 0 0 0 1px rgba(255, 90, 106, .55); }
+
+/* Leistung (1.2.0): Weichzeichner nur noch bei Dialogen und Meldungen. Hinter den Karten liegt ein
+   stillstehender Hintergrund, der Blur kostete dort fast die ganze Grafikleistung ohne sichtbaren Gewinn. */
+.card, .strip, .pad, .rail, .notice, .top { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.card { background: linear-gradient(180deg, rgba(255, 255, 255, .085), rgba(255, 255, 255, .035)); }
+.rail { background: linear-gradient(180deg, rgba(255, 255, 255, .095), rgba(255, 255, 255, .045)); }
+.dialog.whatsnew { max-height: calc(100vh - 48px); overflow-y: auto; }

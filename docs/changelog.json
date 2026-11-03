@@ -1,10 +1,46 @@
 {
+  "1.2.0": {
+    "de": [
+      "Stummschalten wirkt jetzt überall, auch ohne virtuelles Mikro",
+      "Deutlich weniger Leistung und Arbeitsspeicher, vor allem im Tray",
+      "Beim Sprechen leiser und Stumm-Erinnerung laufen auch bei geschlossenem Fenster",
+      "Vorlage „Gaming“ nutzt die sparsame KI-Rauschunterdrückung",
+      "Hinweis bei belegten Tastenkürzeln",
+      "Nach jedem Update zeigt ein Fenster, was neu ist"
+    ],
+    "en": [
+      "Mute now works everywhere, even without the virtual mic",
+      "Much less CPU and memory use, especially in the tray",
+      "Lower while talking and muted reminder work with the window closed",
+      "The Gaming preset uses the lighter AI noise suppression",
+      "A notice when a shortcut is already taken",
+      "After every update a window shows what's new"
+    ]
+  },
   "1.1.1": {
-    "de": ["Navigation links lässt sich unter Windows wieder anklicken", "Fenster lässt sich weiter über die obere Leiste verschieben"],
-    "en": ["The navigation on the left is clickable on Windows again", "You can still move the window by its top bar"]
+    "de": [
+      "Navigation links lässt sich unter Windows wieder anklicken",
+      "Fenster lässt sich weiter über die obere Leiste verschieben"
+    ],
+    "en": [
+      "The navigation on the left is clickable on Windows again",
+      "You can still move the window by its top bar"
+    ]
   },
   "1.1.0": {
-    "de": ["Stream-Mix: zweiter Regler pro App für deinen OBS-Stream", "Equalizer für den ganzen PC-Sound mit 8 Vorlagen", "Automatische Updates", "Englische Oberfläche", "Sprechtaste, Soundboard, Einblendung über Spielen, Lieblingsgeräte"],
-    "en": ["Stream mix: a second fader per app for your OBS stream", "System-wide equalizer with 8 presets", "Automatic updates", "English interface", "Push to talk, soundboard, in-game overlay, favorite devices"]
+    "de": [
+      "Stream-Mix: zweiter Regler pro App für deinen OBS-Stream",
+      "Equalizer für den ganzen PC-Sound mit 8 Vorlagen",
+      "Automatische Updates",
+      "Englische Oberfläche",
+      "Sprechtaste, Soundboard, Einblendung über Spielen, Lieblingsgeräte"
+    ],
+    "en": [
+      "Stream mix: a second fader per app for your OBS stream",
+      "System-wide equalizer with 8 presets",
+      "Automatic updates",
+      "English interface",
+      "Push to talk, soundboard, in-game overlay, favorite devices"
+    ]
   }
 }

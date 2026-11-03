@@ -42,5 +42,6 @@ contextBridge.exposeInMainWorld('fx', {
   onObs: on('fx:obs'),
   eq: (op, text) => ipcRenderer.invoke('fx:eq', op, text),
   update: (op, val) => ipcRenderer.invoke('fx:update', op, val),
-  onUpdate: on('fx:update')
+  onUpdate: on('fx:update'),
+  onVisible: on('fx:visible')
 });

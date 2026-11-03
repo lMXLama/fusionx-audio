@@ -269,4 +269,20 @@ window.FX_EN = {
 
   // ---- Stimmen-Status in Profilen/Tasten
   "Voice-Chat": "Voice chat", "Gesamt": "Total", "Stimme": "Voice", "aus": "off", "an": "on"
+  // ---- Was ist neu (1.2.0)
+  ,"Danke für euer Feedback! Das hat sich geändert:": "Thanks for your feedback! Here’s what changed:", "Neu": "New", "Behoben": "Fixed", "Schneller": "Faster", "Alles klar": "Got it", "Was ist neu?": "What’s new?",
+  "Probleme oder Ideen? Schreib an": "Problems or ideas? Write to",
+  "Stummschalten wirkt jetzt überall: Discord & Co. hören dich nicht mehr, auch ohne virtuelles Mikro": "Mute now works everywhere: Discord & co. no longer hear you, even without the virtual mic",
+  "Braucht deutlich weniger Leistung und Arbeitsspeicher, vor allem wenn Fusion-X im Tray läuft": "Uses much less CPU and memory, especially while Fusion-X runs in the tray",
+  "Beim Sprechen leiser, Stumm-Erinnerung und Stream Deck laufen auch bei geschlossenem Fenster zuverlässig": "Lower while talking, muted reminder and Stream Deck now work reliably with the window closed",
+  "Vorlage „Gaming“ nutzt jetzt die sparsame KI-Rauschunterdrückung. „KI Studio“ bleibt wählbar": "The “Gaming” preset now uses the lighter AI noise suppression. “AI Studio” is still available",
+  "Hinweis, wenn ein Tastenkürzel schon von einem anderen Programm belegt ist": "A notice when a shortcut is already used by another program",
+  "Dieses Fenster: Nach jedem Update siehst du sofort, was neu ist": "This window: after every update you see right away what’s new",
+  "Navigation links lässt sich unter Windows wieder anklicken": "The navigation on the left is clickable on Windows again",
+  "Stream-Mix: zweiter Regler pro App für deinen OBS-Stream": "Stream mix: a second fader per app for your OBS stream",
+  "Equalizer für den ganzen PC-Sound mit 8 Vorlagen": "System-wide equalizer with 8 presets",
+  "Automatische Updates und englische Oberfläche": "Automatic updates and English interface",
+  "Von einem anderen Programm belegt. Klick und wähl eine andere Kombination.": "Already used by another program. Click and choose another combination.",
+  "Ein anderes Programm nutzt sie schon. Unter Einstellungen kannst du andere festlegen.": "Another program already uses them. You can set different ones in Settings.",
+  "Tastenkürzel belegt:": "Shortcuts taken:"
 };
