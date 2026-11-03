@@ -1,0 +1,11 @@
+{
+  "name": "fusionx-discord-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hält den Fusion-X-Bot online: Status, Slash-Befehle und Begrüßung in den Support-Foren",
+  "type": "module",
+  "main": "bot.mjs",
+  "scripts": { "start": "node bot.mjs" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "discord.js": "14.26.5" }
+}

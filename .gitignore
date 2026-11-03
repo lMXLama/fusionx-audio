@@ -1,2 +1,5 @@
 node_modules/
 dist/
+
+discord-bot/.env
+discord-bot/node_modules/
