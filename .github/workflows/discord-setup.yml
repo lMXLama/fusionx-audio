@@ -19,8 +19,8 @@ jobs:
       - name: Server aufbauen
         run: node .github/discord/setup.mjs
         env:
-          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN || vars.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID || vars.DISCORD_GUILD_ID }}
       - name: Einladungslink für die Website speichern
         run: |
           if [ -n "$(git status --porcelain docs/community.json)" ]; then

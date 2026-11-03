@@ -1,6 +1,6 @@
 // Kleine Hilfe für die Discord-REST-API (v10). Läuft in GitHub Actions mit Node 22.
-export const TOKEN = process.env.DISCORD_BOT_TOKEN || '';
-export const GUILD = process.env.DISCORD_GUILD_ID || '';
+export const TOKEN = (process.env.DISCORD_BOT_TOKEN || '').trim().replace(/^Bot\s+/i, '');
+export const GUILD = (process.env.DISCORD_GUILD_ID || '').trim();
 const API = process.env.DISCORD_API || 'https://discord.com/api/v10';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

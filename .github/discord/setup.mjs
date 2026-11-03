@@ -3,7 +3,14 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { api, P, bits, TOKEN, GUILD, summary } from './lib.mjs';
 
-if (!TOKEN || !GUILD) { console.error('DISCORD_BOT_TOKEN oder DISCORD_GUILD_ID fehlt (GitHub → Settings → Secrets → Actions).'); process.exit(1); }
+if (!TOKEN || !GUILD) {
+  summary('## ❌ Discord-Zugangsdaten fehlen');
+  summary('- DISCORD_BOT_TOKEN: ' + (TOKEN ? 'vorhanden' : '**fehlt**'));
+  summary('- DISCORD_GUILD_ID: ' + (GUILD ? 'vorhanden' : '**fehlt**'));
+  summary('Bitte unter Settings → Secrets and variables → **Actions** → Reiter **Secrets** → „New repository secret“ anlegen (nicht unter Codespaces, Dependabot oder einer Environment).');
+  process.exit(1);
+}
+if (!/^\d{17,20}$/.test(GUILD.trim())) { summary('❌ DISCORD_GUILD_ID sieht falsch aus (erwartet wird eine 17–20-stellige Zahl, Rechtsklick auf den Server → „Server-ID kopieren“).'); process.exit(1); }
 
 const RAW = 'https://raw.githubusercontent.com/lMXLama/fusionx-audio/main';
 const SITE = 'https://lmxlama.github.io/fusionx-audio/';
