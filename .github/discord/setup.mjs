@@ -333,9 +333,8 @@ if (community) {
           opt('Gaming', 'Voice-Chat und Spiele', [R.gamer.id], '🎮'),
           opt('Musik & Podcast', 'Aufnehmen, Musik, Podcasts', [R.creator.id], '🎧')
         ]),
-        prompt('Bei neuen Updates benachrichtigt werden?', true, () => [
-          opt('Ja, bitte', 'Du wirst in #changelog erwähnt, sobald eine neue Version erscheint', [R.ping.id], '🔔'),
-          opt('Nein, danke', 'Du kannst das später unter Kanäle & Rollen ändern', [], '🔕')
+        prompt('Benachrichtigungen', false, () => [
+          opt('Neue Versionen', 'Erwähnung in #changelog, sobald ein Update erscheint. Jederzeit unter Kanäle & Rollen änderbar', [R.ping.id], '🔔')
         ])
       ]
     });
