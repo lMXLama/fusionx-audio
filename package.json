@@ -64,7 +64,10 @@
         "repo": "fusionx-audio",
         "releaseType": "release"
       }
-    ]
+    ],
+    "releaseInfo": {
+      "releaseNotesFile": "assets/release-notes.md"
+    }
   },
   "dependencies": {
     "electron-updater": "6.6.2",
