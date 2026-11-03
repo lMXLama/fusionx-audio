@@ -21,7 +21,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Discord-Webhook und Einladung einbauen (falls eingerichtet)
+        run: node .github/discord/prebuild.mjs
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID }}
       - name: Installer bauen und als Release hochladen
         run: npx electron-builder --win nsis --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Neuigkeiten in Discord posten (falls eingerichtet)
+        run: node .github/discord/announce.mjs
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID }}

@@ -53,8 +53,8 @@
     'q5': 'How does the stream mix work?', 'a5': 'In OBS (version 28 or later) turn on the WebSocket server under Tools and paste the password into Fusion-X. Fusion-X creates its own audio source for each app in OBS and controls it with the right fader. OBS desktop audio is muted so nothing is doubled.',
     'q6': 'How do I get the equalizer?', 'a6': 'It uses the free Equalizer APO. On the “Equalizer” page in the app click “Download”, tick your headphones and speakers while installing, restart your PC. After that Fusion-X controls everything.',
     'q7': 'Is there Fusion-X for Mac or Linux?', 'a7': 'No, right now it’s Windows 10 and 11 only.',
-    'q8': 'Something doesn’t work. What now?', 'a8': 'In the app go to Settings, click “Copy diagnostics” and send the text to maxilama67@gmail.com. Then I can see exactly what’s wrong.',
-    'ct.t': 'Questions, problems or ideas?', 'ct.p': 'Write to me. Bug reports and wishes go straight into the next version.', 'ct.mail': 'Email for problems', 'ct.gh': 'Source code and versions',
+    'q8': 'Something doesn’t work. What now?', 'a8': 'In the app go to Settings, click “Report a problem” and briefly describe what happens. The technical info is sent along automatically. Or write to maxilama67@gmail.com.',
+    'ct.t': 'Questions, problems or ideas?', 'ct.p': 'Write to me. Bug reports and wishes go straight into the next version.', 'ct.mail': 'Email for problems', 'ct.dc': 'Help, bugs and news', 'ct.gh': 'Source code and versions',
     'f.by': 'by L_MX_', 'f.privacy': 'Privacy', 'f.rel': 'Versions', 'f.contact': 'Contact',
     'f.fine': '© 2026 L_MX_. Discord, OBS, Spotify, Stream Deck and all other names mentioned are trademarks of their respective owners. VB-CABLE is a product of VB-Audio, Equalizer APO is an open-source project by Jonas Thedering.',
     'ver': 'Version', 'free': 'Free', 'size': 'MB', 'released': 'Released'
@@ -312,6 +312,13 @@
   });
   $('#lbClose').addEventListener('click', function () { lb.close(); });
   lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
+
+  // Discord-Einladung (wird beim Einrichten des Servers automatisch eingetragen)
+  fetch('community.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    if (!j || !/^https:\/\/discord\.gg\//.test(j.discord || '')) return;
+    $$('[data-discord]').forEach(function (a) { a.href = j.discord; a.hidden = false; });
+    var row = $('.ctrow'); if (row) row.classList.add('five');
+  }).catch(function () {});
 
   setLang(initial);
   onScroll();

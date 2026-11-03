@@ -316,3 +316,8 @@ html[lang="de"] .lang [data-l="de"], html[lang="en"] .lang [data-l="en"] { backg
   *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; transition-duration: .001ms !important; }
   .osd { display: none; }
 }
+
+.ctrow.five { grid-template-columns: 1.3fr repeat(4, 1fr); }
+.ct.discord svg { color: #8c9eff; }
+@media (max-width: 1020px) { .ctrow.five { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) { .ctrow.five { grid-template-columns: 1fr; } }
