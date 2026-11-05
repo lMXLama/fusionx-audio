@@ -14,6 +14,7 @@
   // Muster für zusammengesetzte Texte. Die Funktion bekommt den Treffer und tr() für Teile.
   var P = [
     [/^Neu in Version (.+)$/, function (m) { return 'What’s new in version ' + m[1]; }],
+    [/^Design „(.+)“ aktiv$/, function (m, t) { return 'Theme “' + t(m[1]) + '” active'; }],
     [/^Tastenkürzel belegt: (.+?)\. (Ein anderes Programm.+)$/, function (m, t) { return 'Shortcuts taken: ' + t(m[1]) + '. ' + t(m[2]); }],
     [/^(Ton|Mikrofon): „(.+)“ statt „(.+)“(\.?)$/, function (m) { return (m[1] === 'Ton' ? 'Sound' : 'Microphone') + ': “' + m[2] + '” instead of “' + m[3] + '”' + m[4]; }],
     [/^(\d+) Quellen? in der Szene „(.+)“$/, function (m) { return m[1] + (m[1] === '1' ? ' source' : ' sources') + ' in the scene “' + m[2] + '”'; }],

@@ -14,6 +14,7 @@
   var pill = document.getElementById('pill');
   window.fx.onOsd(function (d) {
     if (d.hide) { pill.classList.remove('on'); return; }
+    if (d.theme) { var r = document.documentElement.style; r.setProperty('--acc', d.theme.accent); r.setProperty('--acc2', d.theme.accent2); r.setProperty('--voice', d.theme.voice); }
     pill.className = 'pill ' + (d.tone || '');
     document.getElementById('ico').innerHTML = '<svg viewBox="0 0 24 24">' + (I[d.icon] || I.mic) + '</svg>';
     document.getElementById('t').textContent = d.title || '';

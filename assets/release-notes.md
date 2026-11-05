@@ -1,4 +1,6 @@
-- Mit Windows starten lässt sich jetzt wieder einschalten und bleibt eingeschaltet
-- Tipp auf der Mikrofon-Seite: So hört man dich beim Bildschirm teilen in Discord nicht doppelt
-- EN: Start with Windows can be switched on again and stays on
-- EN: Tip on the Microphone page: how to avoid others hearing you twice when you share your screen on Discord
+- Neues Update-Fenster: Beim Start siehst du sofort, was neu ist, und entscheidest: jetzt, später oder beim nächsten Start
+- Design wählen: 7 Farbstile in den Einstellungen, passend zum Fusion-X-Look
+- Update fragt jetzt auch nach, wenn „Automatisch aktualisieren“ aus ist
+- EN: New update window: on startup you see what’s new right away and decide: now, later or next start
+- EN: Pick a theme: 7 color styles in Settings that match the Fusion-X look
+- EN: Updates are now offered even when “Update automatically” is off

@@ -209,6 +209,7 @@ function showOsd(data) {
   const area = screen.getPrimaryDisplay().workArea;
   const pos = data.position === 'top' ? area.y + 24 : area.y + area.height - 96 - 40;
   w.setBounds({ x: Math.round(area.x + (area.width - 420) / 2), y: Math.round(pos), width: 420, height: 96 });
+  if (settings.themeColors) data = { ...data, theme: settings.themeColors };
   const go = () => { w.webContents.send('fx:osd', data); w.showInactive(); };
   if (w.webContents.isLoading()) w.webContents.once('did-finish-load', go); else go();
   clearTimeout(osdTimer);
@@ -402,6 +403,26 @@ function setupIpc() {
 let updater = null;
 let updateState = { state: 'idle', enabled: false };
 let updateTimer = null;
+let installWhenReady = false;
+const vnum = (v) => String(v || '').split('.').reduce((a, x) => a * 1000 + (parseInt(x, 10) || 0), 0);
+// Änderungen aller Versionen zwischen der installierten und der neuen (für das Update-Fenster)
+async function fetchChangelog(target) {
+  try {
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6000);
+    const r = await fetch('https://raw.githubusercontent.com/lMXLama/fusionx-audio/main/docs/changelog.json', { signal: ctl.signal });
+    clearTimeout(t);
+    const all = await r.json();
+    const cur = vnum(app.getVersion()), max = vnum(target);
+    return Object.keys(all).filter((v) => vnum(v) > cur && vnum(v) <= max).sort((a, b) => vnum(b) - vnum(a)).slice(0, 5)
+      .map((v) => ({ v, de: all[v].de || [], en: all[v].en || [] }));
+  } catch (_) { return null; }
+}
+// Release-Text von GitHub (HTML) in einzelne Zeilen zerlegen, falls changelog.json nicht erreichbar ist
+function notesToLines(html) {
+  return String(html || '').replace(/<\/(li|p|h\d)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .split('\n').map((l) => l.replace(/^\s*[-*•]\s*/, '').trim()).filter(Boolean).slice(0, 20);
+}
 function updaterConfigured() {
   // Erst aktiv, wenn in package.json unter build.publish ein echter GitHub-Name steht
   try {
@@ -417,14 +438,22 @@ function setupUpdater() {
   updater.autoDownload = settings.autoUpdate !== false;
   updater.autoInstallOnAppQuit = true;
   updater.on('checking-for-update', () => setUpdate({ state: 'checking', error: '' }));
-  updater.on('update-available', (i) => setUpdate({ state: updater.autoDownload ? 'downloading' : 'available', version: i.version, notes: typeof i.releaseNotes === 'string' ? i.releaseNotes.replace(/<[^>]+>/g, '').slice(0, 600) : '', percent: 0 }));
+  updater.on('update-available', (i) => {
+    const lines = notesToLines(typeof i.releaseNotes === 'string' ? i.releaseNotes : '');
+    setUpdate({ state: updater.autoDownload ? 'downloading' : 'available', version: i.version, notes: lines.join('\n').slice(0, 1500), noteLines: lines, releaseDate: i.releaseDate || '', percent: 0 });
+    fetchChangelog(i.version).then((cl) => { if (cl && cl.length) setUpdate({ changelog: cl }); });
+  });
   updater.on('update-not-available', () => setUpdate({ state: 'current', checkedAt: Date.now() }));
   updater.on('download-progress', (p) => setUpdate({ state: 'downloading', percent: Math.round(p.percent || 0) }));
-  updater.on('update-downloaded', (i) => { setUpdate({ state: 'ready', version: i.version }); });
+  updater.on('update-downloaded', (i) => {
+    setUpdate({ state: 'ready', version: i.version });
+    if (installWhenReady) { quitting = true; setTimeout(() => updater.quitAndInstall(false, true), 600); }
+  });
   updater.on('error', (e) => setUpdate({ state: 'error', error: String(e && e.message || e).split('\n')[0].slice(0, 200) }));
   updateState = { state: 'idle', enabled: true };
-  const check = () => { if (settings.autoUpdate !== false) updater.checkForUpdates().catch(() => {}); };
-  setTimeout(check, 15000);
+  // Beim Start immer prüfen (damit das Update-Fenster erscheint), geladen wird nur bei „Automatisch aktualisieren“
+  const check = () => { if (updateState.state !== 'downloading' && updateState.state !== 'ready') updater.checkForUpdates().catch(() => {}); };
+  setTimeout(check, 4000);
   updateTimer = setInterval(check, 6 * 3600 * 1000);
 }
 async function updaterOp(op, val) {
@@ -434,6 +463,16 @@ async function updaterOp(op, val) {
   if (op === 'download') { try { await updater.downloadUpdate(); } catch (e) { setUpdate({ state: 'error', error: e.message }); } }
   if (op === 'auto') { settings.autoUpdate = !!val; updater.autoDownload = !!val; saveSettings(); }
   if (op === 'install') { quitting = true; setImmediate(() => updater.quitAndInstall(false, true)); }
+  // Aus dem Update-Fenster: jetzt aktualisieren (laden und danach sofort installieren)
+  if (op === 'now') {
+    if (updateState.state === 'ready') { quitting = true; setImmediate(() => updater.quitAndInstall(false, true)); }
+    else { installWhenReady = true; if (updateState.state === 'available') { setUpdate({ state: 'downloading', percent: 0 }); updater.downloadUpdate().catch((e) => setUpdate({ state: 'error', error: e.message })); } }
+  }
+  // Später: im Hintergrund laden, Installation beim Beenden
+  if (op === 'onquit') {
+    installWhenReady = false;
+    if (updateState.state === 'available') { setUpdate({ state: 'downloading', percent: 0 }); updater.downloadUpdate().catch((e) => setUpdate({ state: 'error', error: e.message })); }
+  }
   return { ...updateState, current: app.getVersion() };
 }
 

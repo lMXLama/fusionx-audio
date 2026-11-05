@@ -10,20 +10,20 @@
   html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
   body { display: grid; place-items: center; font-family: "Plex", "Segoe UI", sans-serif; color: #eef6ff; -webkit-font-smoothing: antialiased; }
   .pill {
-    --c: #2ee6d6;
+    --c: var(--acc, #2ee6d6);
     display: flex; align-items: center; gap: 14px; padding: 12px 22px 12px 14px; border-radius: 999px;
     background: linear-gradient(180deg, rgba(30, 44, 64, .92), rgba(12, 19, 30, .92));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 0 0 1px rgba(255, 255, 255, .09), 0 12px 30px rgba(0, 0, 0, .45);
     transform: translateY(10px) scale(.96); opacity: 0; transition: transform .22s cubic-bezier(.2, .9, .3, 1.2), opacity .18s;
   }
   .pill.on { transform: none; opacity: 1; }
-  .pill.voice { --c: #8fb2ff; } .pill.bad { --c: #ff5a6a; } .pill.ok { --c: #3ddc97; }
+  .pill.voice { --c: var(--voice, #8fb2ff); } .pill.bad { --c: #ff5a6a; } .pill.ok { --c: #3ddc97; }
   .ico { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--c); background: radial-gradient(circle, color-mix(in srgb, var(--c) 30%, transparent), color-mix(in srgb, var(--c) 6%, transparent) 70%); box-shadow: inset 0 0 0 2px var(--c), 0 0 18px color-mix(in srgb, var(--c) 50%, transparent); flex: none; }
   .ico svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
   b { display: block; font-family: "Montserrat", sans-serif; font-weight: 600; font-size: 16px; letter-spacing: .01em; white-space: nowrap; }
   span { display: block; font-size: 12.5px; color: #a9bccf; margin-top: 1px; white-space: nowrap; }
   .bar { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .12); margin-top: 6px; width: 200px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: linear-gradient(90deg, #2ee6d6, #2b8cff); border-radius: 2px; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--acc, #2ee6d6), var(--acc2, #2b8cff)); border-radius: 2px; }
 </style>
 </head>
 <body>

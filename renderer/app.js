@@ -31,6 +31,9 @@
     webcam: '<circle cx="12" cy="10" r="6"/><circle cx="12" cy="10" r="2"/><path d="M8 20h8M12 16v4"/>',
     duck: '<path d="M3 9.5v5h3.2l4.3 3.6V5.9L6.2 9.5H3z"/><path d="M17.5 5.5v10M14 12.5l3.5 3.5 3.5-3.5"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    power: '<path d="M12 3.5v8"/><path d="M7 6.3a7.5 7.5 0 1 0 10 0"/>',
     warn: '<path d="M12 3.5l9.5 17h-19L12 3.5z"/><path d="M12 10v4.5M12 17.5v.01"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.01"/>',
     sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7L19 15z"/>',
@@ -164,6 +167,9 @@
     eq: { enabled: false, preset: 'flat', bands: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
     lang: 'auto',
     lastSeenVersion: '',
+    theme: 'fusion',
+    ownerKey: '',
+    themeColors: null,
     hardMuted: [],
     autoUpdate: true
   };
@@ -844,7 +850,7 @@
       '<div class="btns' + (smOn() ? ' three' : '') + '"><button class="iconbtn mute" data-act="voiceMute" aria-pressed="' + !!mic.muted + '" aria-label="Mikrofon stumm">' + ic(mic.muted ? 'micOff' : 'mic', 'sm') + '</button>' +
       (smOn() ? '<button class="iconbtn smon" data-act="voiceStream" aria-pressed="' + !!S.settings.streamMix.voice.on + '" title="Stimme im Stream-Mix" aria-label="Stimme im Stream-Mix">' + ic('stream', 'sm') + '</button>' : '') +
       '<button class="iconbtn" data-nav="mic" aria-label="Mikrofon-Einstellungen">' + ic('settings', 'sm') + '</button></div>';
-    var vf = vfader({ value: (mic.gainDb + 12) / 42, color: '#9bb9ff', color2: '#4a6dff', label: 'Mikrofon-Lautstärke', reset: 12 / 42,
+    var vf = vfader({ value: (mic.gainDb + 12) / 42, color: FX_THEMES.color('vh'), color2: FX_THEMES.color('vb'), label: 'Mikrofon-Lautstärke', reset: 12 / 42,
       onInput: function (val) { mic.gainDb = Math.round((val * 42 - 12) * 2) / 2; $('[data-val="voice"]').textContent = fmtDb(mic.gainDb, true); S.engine.update(mic); },
       onCommit: function () { save(); } });
     $('.fs', vs).replaceWith(vf);
@@ -1225,8 +1231,8 @@
     if (mic.hpf.on) co.push(biquad('hp', mic.hpf.freq, 0, 0.707));
     g.beginPath();
     for (var x = 0; x <= W; x += 2) { var s = 0; co.forEach(function (c) { s += magDb(c, G.f(x)); }); var y = G.y(clamp(s, -15, 15)); if (x) g.lineTo(x, y); else g.moveTo(x, y); }
-    g.lineWidth = 2.5; g.strokeStyle = mic.eq.on ? '#6c9bff' : '#5b6672'; g.stroke();
-    g.lineTo(W, G.y(0)); g.lineTo(0, G.y(0)); g.closePath(); g.fillStyle = 'rgba(108,155,255,.09)'; g.fill();
+    g.lineWidth = 2.5; g.strokeStyle = mic.eq.on ? FX_THEMES.color('voice') : '#5b6672'; g.stroke();
+    g.lineTo(W, G.y(0)); g.lineTo(0, G.y(0)); g.closePath(); g.fillStyle = FX_THEMES.color('voice', .09); g.fill();
     Object.keys(BANDS).forEach(function (k) { var b = mic.eq[k]; g.beginPath(); g.arc(G.x(b.f), G.y(b.g), eqDrag === k ? 9 : 7, 0, 7); g.fillStyle = BANDS[k].c; g.fill(); g.lineWidth = 2; g.strokeStyle = '#080a0d'; g.stroke(); });
   }
 
@@ -1335,11 +1341,11 @@
     [-12, -6, 0, 6, 12].forEach(function (d) { var y = Math.round(Y(d)) + 0.5; g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); });
     var pts = [];
     for (var x = 0; x <= W; x += 2) pts.push([x, Y(clamp(e.enabled ? peqCurveDb(e.bands, Math.pow(10, l0 + x / W * (l1 - l0))) : 0, -12.5, 12.5))]);
-    var grad = g.createLinearGradient(0, 0, W, 0); grad.addColorStop(0, '#2b8cff'); grad.addColorStop(1, '#2ee6d6');
+    var grad = g.createLinearGradient(0, 0, W, 0); grad.addColorStop(0, FX_THEMES.color('accent2')); grad.addColorStop(1, FX_THEMES.color('accent'));
     g.beginPath(); pts.forEach(function (p, i) { if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); });
-    g.lineWidth = 3; g.strokeStyle = e.enabled ? grad : 'rgba(255,255,255,.25)'; g.shadowColor = 'rgba(46,230,214,.6)'; g.shadowBlur = e.enabled ? 12 : 0; g.stroke(); g.shadowBlur = 0;
+    g.lineWidth = 3; g.strokeStyle = e.enabled ? grad : 'rgba(255,255,255,.25)'; g.shadowColor = FX_THEMES.color('accent', .6); g.shadowBlur = e.enabled ? 12 : 0; g.stroke(); g.shadowBlur = 0;
     g.lineTo(W, Y(0)); g.lineTo(0, Y(0)); g.closePath();
-    var fill = g.createLinearGradient(0, 0, 0, H); fill.addColorStop(0, 'rgba(46,230,214,.22)'); fill.addColorStop(0.5, 'rgba(43,140,255,.05)'); fill.addColorStop(1, 'rgba(46,230,214,.22)');
+    var fill = g.createLinearGradient(0, 0, 0, H); fill.addColorStop(0, FX_THEMES.color('accent', .22)); fill.addColorStop(0.5, FX_THEMES.color('accent2', .05)); fill.addColorStop(1, FX_THEMES.color('accent', .22));
     g.fillStyle = fill; g.fill();
     var pre = $('#peqPre');
     if (pre) { var p = peqPreamp(e.bands); pre.textContent = e.enabled && p ? 'Vorverstärkung ' + fmtDb(p) + ' (automatisch, damit nichts verzerrt)' : 'Kein Ausgleich nötig'; }
@@ -1363,6 +1369,11 @@
 
   // ------------------------------------------------------------------ Was ist neu (nach jedem Update einmal)
   var CHANGELOG = [
+    { v: '1.3.0', items: [
+      ['new', 'Neues Update-Fenster: Beim Start siehst du sofort, was neu ist, und entscheidest: jetzt, später oder beim nächsten Start'],
+      ['new', 'Design wählen: 7 Farbstile in den Einstellungen, passend zum Fusion-X-Look'],
+      ['fix', 'Update fragt jetzt auch nach, wenn „Automatisch aktualisieren“ aus ist']
+    ] },
     { v: '1.2.2', items: [
       ['fix', 'Mit Windows starten lässt sich jetzt wieder einschalten und bleibt eingeschaltet'],
       ['new', 'Tipp auf der Mikrofon-Seite: So hört man dich beim Bildschirm teilen in Discord nicht doppelt']
@@ -1435,7 +1446,118 @@
     var was = S.update && S.update.state;
     S.update = Object.assign({}, S.update, u);
     var box = $('#updBox'); if (box) box.innerHTML = updHtml();
-    if (u.state === 'ready' && was !== 'ready') { toast('Update auf Version ' + u.version + ' ist bereit. Es wird beim Beenden installiert.'); renderNav(); }
+    if (u.state === 'ready' && was !== 'ready' && !$('.dialog.updpop')) { toast('Update auf Version ' + u.version + ' ist bereit. Es wird beim Beenden installiert.'); renderNav(); }
+    updPopRefresh();
+    maybeUpdatePopup();
+  }
+
+  // ------------------------------------------------------------------ Update-Fenster beim Start
+  // Erscheint bei jedem Start, solange eine neuere Version da ist. „Überspringen“ gilt bis zum nächsten Start.
+  var UPD = { skipped: false, remindAt: 0, timer: null, busy: false };
+  function updNewer() { var u = S.update || {}; return u.version && vNum(u.version) > vNum(S.version) && /^(available|downloading|ready)$/.test(u.state); }
+  function maybeUpdatePopup() {
+    if (S.demo && !S.demoUpdate) return;
+    if (!updNewer() || UPD.skipped || Date.now() < UPD.remindAt || $('.dialog.updpop') || !S.settings.onboarded) return;
+    if ($('#modal').innerHTML) { clearTimeout(UPD.timer); UPD.timer = setTimeout(maybeUpdatePopup, 2000); return; }
+    openUpdatePopup();
+  }
+  function updLines() {
+    var u = S.update || {}, en = !!(window.FxI18n && FxI18n.lang === 'en');
+    if (u.changelog && u.changelog.length) return u.changelog.map(function (c) { return { v: c.v, items: (en && c.en && c.en.length ? c.en : c.de) || [] }; });
+    var lines = (u.noteLines || []).filter(function (l) { return en ? /^EN:/.test(l) : !/^EN:/.test(l); }).map(function (l) { return l.replace(/^EN:\s*/, ''); });
+    return lines.length ? [{ v: u.version, items: lines }] : [];
+  }
+  function openUpdatePopup() {
+    var u = S.update, list = updLines();
+    var dlg = modal('<div class="wnhead"><img src="brand/emblem.png" alt="" width="54" height="54"><div><span class="badge accent">Update verfügbar</span><h2 style="margin-top:6px">Fusion-X Audio <span class="mono">' + esc(u.version) + '</span></h2>' +
+        '<p class="lead">Du nutzt noch Version <b class="mono" style="display:inline">' + esc(S.version) + '</b>. Das ist neu:</p></div></div>' +
+      '<div class="updpop-body">' + (list.length ? list.map(function (c, i) {
+        return (list.length > 1 ? '<h3 class="wnver">Version ' + esc(c.v) + '</h3>' : '') + '<ul class="wnlist">' + c.items.map(function (l) { return '<li><span class="wndot"></span><span>' + esc(l) + '</span></li>'; }).join('') + '</ul>';
+      }).join('') : '<p class="small muted">Verbesserungen und Fehlerbehebungen.</p>') + '</div>' +
+      '<div class="updpop-prog" id="updPopProg" hidden><div class="row" style="justify-content:space-between"><span id="updPopTxt">Wird geladen …</span><span class="mono" id="updPopPct"></span></div><div class="updbar"><i id="updPopBar" style="width:0%"></i></div></div>' +
+      '<div class="updpop-later" id="updLater" hidden><span class="eyebrow">Später aktualisieren</span><div class="updpop-opts">' +
+        '<button class="btn sm" data-upl="quit">' + ic('power', 'sm') + 'Beim Beenden installieren</button>' +
+        '<button class="btn sm" data-upl="60">' + ic('clock', 'sm') + 'In 1 Stunde erinnern</button>' +
+        '<button class="btn sm" data-upl="180">' + ic('clock', 'sm') + 'In 3 Stunden erinnern</button></div></div>' +
+      '<div class="foot"><button class="btn ghost" id="updSkip">Überspringen</button><span style="flex:1"></span><button class="btn" id="updLaterBtn">' + ic('clock', 'sm') + 'Später</button><button class="btn primary" id="updNow">' + ic('refresh', 'sm') + 'Jetzt aktualisieren</button></div>', 'whatsnew updpop');
+    $('#updSkip', dlg).onclick = function () { UPD.skipped = true; closeModal(); toast('Erinnerung beim nächsten Start von Fusion-X.'); };
+    $('#updLaterBtn', dlg).onclick = function () { var l = $('#updLater', dlg); l.hidden = !l.hidden; };
+    $('#updNow', dlg).onclick = function () { UPD.busy = true; fx.update('now').then(onUpdate).catch(function () {}); updPopRefresh(); };
+    Array.prototype.forEach.call(dlg.querySelectorAll('[data-upl]'), function (b) {
+      b.onclick = function () {
+        var v = b.dataset.upl;
+        if (v === 'quit') { UPD.skipped = true; fx.update('onquit').then(onUpdate).catch(function () {}); closeModal(); toast('Das Update wird beim Beenden von Fusion-X installiert.'); return; }
+        UPD.remindAt = Date.now() + (+v) * 60e3; clearTimeout(UPD.timer); UPD.timer = setTimeout(maybeUpdatePopup, (+v) * 60e3 + 500);
+        closeModal(); toast(v === '60' ? 'Ich erinnere dich in 1 Stunde.' : 'Ich erinnere dich in 3 Stunden.');
+      };
+    });
+    updPopRefresh();
+  }
+  function updPopRefresh() {
+    var dlg = $('.dialog.updpop'); if (!dlg || !UPD.busy) return;
+    var u = S.update || {}, prog = $('#updPopProg', dlg), btns = dlg.querySelectorAll('.foot button');
+    prog.hidden = false; $('#updLater', dlg).hidden = true;
+    Array.prototype.forEach.call(btns, function (b) { b.disabled = true; });
+    if (u.state === 'error') { $('#updPopTxt', dlg).textContent = 'Update fehlgeschlagen. Bitte später noch einmal versuchen.'; $('#updPopPct', dlg).textContent = ''; Array.prototype.forEach.call(btns, function (b) { b.disabled = false; }); UPD.busy = false; return; }
+    var ready = u.state === 'ready', pct = ready ? 100 : (u.percent || 0);
+    $('#updPopTxt', dlg).textContent = ready ? 'Wird installiert, Fusion-X startet gleich neu …' : 'Wird geladen …';
+    $('#updPopPct', dlg).textContent = ready ? '' : pct + ' %';
+    $('#updPopBar', dlg).style.width = pct + '%';
+  }
+
+  // ------------------------------------------------------------------ Design (Farben)
+  function themeSave(t) {
+    S.settings.themeColors = { accent: t.accent, accent2: t.accent2, voice: t.vh };
+    save();
+  }
+  function initTheme() {
+    var st = S.settings, T = window.FX_THEMES; if (!T) return;
+    // Erst sofort anwenden, dann den Inhaber-Code im Hintergrund prüfen
+    T.apply(st.theme, !!st.ownerKey);
+    if (st.ownerKey) T.checkOwner(st.ownerKey).then(function (ok) {
+      S.owner = ok;
+      if (!ok) { st.ownerKey = ''; if (T.get(st.theme) && T.get(st.theme).owner) st.theme = 'fusion'; save(); T.apply(st.theme, false); if (S.page === 'settings') renderPage(); }
+    });
+  }
+  function themeCard() {
+    var T = window.FX_THEMES; if (!T) return '';
+    var cur = T.current().id;
+    return '<section class="card" style="grid-column:1/-1"><h2>' + ic('sparkle') + 'Design</h2><p class="lead">Wähle deine Farben. Der dunkle Studio-Look bleibt, Regler, Anzeigen und Schalter passen sich an.</p>' +
+      '<div class="themes">' + T.list.map(function (t) {
+        var locked = t.owner && !S.owner, on = t.id === cur;
+        return '<button class="theme' + (t.owner ? ' owner' : '') + (locked ? ' locked' : '') + '" data-theme-pick="' + t.id + '" aria-pressed="' + on + '" style="--ta:' + t.accent + ';--tb:' + t.accent2 + ';--tc:' + t.vh + '">' +
+          '<span class="tsw">' + (locked ? ic('lock', 'sm') : (on ? ic('check', 'sm') : '')) + '</span>' +
+          '<span class="tname">' + esc(t.name) + (t.owner ? ' <em class="ownerbadge">Inhaber</em>' : '') + '</span><small>' + esc(t.desc) + '</small></button>';
+      }).join('') + '</div></section>';
+  }
+  function pickTheme(id) {
+    var T = window.FX_THEMES, t = T && T.get(id); if (!t) return;
+    if (t.owner && !S.owner) { openOwnerUnlock(id); return; }
+    S.settings.theme = id;
+    t = T.apply(id, S.owner);
+    themeSave(t);
+    renderPage();
+    toast('Design „' + t.name + '“ aktiv');
+  }
+  function openOwnerUnlock(id) {
+    var dlg = modal('<div class="wnhead"><span class="chromeorb" aria-hidden="true"></span><div><span class="badge">Nur für den Inhaber</span><h2 style="margin-top:6px">Chrom-Chamäleon</h2><p class="lead">Dieses Design gibt es nur für den Inhaber von Fusion-X. Gib deinen Inhaber-Code ein, um es freizuschalten.</p></div></div>' +
+      '<label class="field" style="display:grid;gap:6px;margin-top:12px"><span class="eyebrow">Inhaber-Code</span><input class="input mono" id="ownCode" maxlength="40" placeholder="LMX-063-…" autocomplete="off" spellcheck="false"></label>' +
+      '<p class="small" id="ownMsg" style="min-height:20px;margin:8px 0 0"></p>' +
+      '<div class="foot"><button class="btn ghost" data-close>Abbrechen</button><button class="btn primary" id="ownGo">' + ic('lock', 'sm') + 'Freischalten</button></div>', 'owner');
+    $('[data-close]', dlg).onclick = closeModal;
+    var inp = $('#ownCode', dlg), msg = $('#ownMsg', dlg), go = $('#ownGo', dlg);
+    var tryIt = function () {
+      go.disabled = true; msg.textContent = 'Wird geprüft …'; msg.className = 'small muted';
+      FX_THEMES.checkOwner(inp.value).then(function (ok) {
+        go.disabled = false;
+        if (!ok) { msg.textContent = 'Dieser Code stimmt nicht.'; msg.className = 'small bad'; dlg.classList.remove('shake'); void dlg.offsetWidth; dlg.classList.add('shake'); return; }
+        S.owner = true; S.settings.ownerKey = inp.value.trim().toUpperCase();
+        closeModal(); pickTheme(id); toast('Inhaber-Design freigeschaltet');
+      });
+    };
+    go.onclick = tryIt;
+    inp.onkeydown = function (e) { if (e.key === 'Enter') tryIt(); };
+    setTimeout(function () { inp.focus(); }, 50);
   }
 
   // ------------------------------------------------------------------ Seite: Geräte
@@ -1549,6 +1671,7 @@
         srow('Durchsichtiges Fenster', 'Glas-Effekt mit Blick auf den Desktop (Windows 11). Wirkt nach einem Neustart von Fusion-X.', sw(st.windowGlass !== false, 'id="setGlass"')) +
         srow('Sprache', 'Language', seg('lang', [['auto', 'Automatisch'], ['de', 'Deutsch'], ['en', 'English']], st.lang)) +
       '</div></section>' +
+      themeCard() +
       '<section class="card"><h2>' + ic('refresh') + 'Updates</h2><div id="updBox" style="margin-top:6px">' + updHtml() + '</div></section>' +
       '<section class="card"><h2>' + ic('bell') + 'Anzeige & Signaltöne</h2><p class="lead">Kleine Einblendung über Spielen und Apps, wenn du per Taste stummschaltest, das Profil wechselst oder die Lautstärke änderst.</p><div style="margin-top:6px">' +
         srow('Bildschirm-Anzeige', 'Funktioniert in Spielen im Fenster- oder randlosen Modus', sw(st.osd.enabled, 'id="osdOn"')) +
@@ -1877,6 +2000,8 @@
     if (dc) { var c = dc.dataset.duckcat; S.settings.ducking.cats[c] = !S.settings.ducking.cats[c]; dc.setAttribute('aria-pressed', S.settings.ducking.cats[c]); save(); return; }
     var hk = e.target.closest('[data-hotkey]');
     if (hk) { recordHotkey(hk); return; }
+    var th = e.target.closest('[data-theme-pick]');
+    if (th) { pickTheme(th.dataset.themePick); return; }
     var a = e.target.closest('[data-act]');
     if (a && a.tagName !== 'SELECT') onAct(a.dataset.act, a, e);
   });
@@ -2219,7 +2344,7 @@
     $('#trBody').innerHTML =
       '<div class="ab"><button data-ab="raw" aria-pressed="false"><b>Original</b><span>So kommt dein Mikro an</span></button><button data-ab="proc" aria-pressed="true"><b>Mit Fusion-X</b><span>So hören dich andere</span></button></div>' +
       '<div style="display:grid;gap:8px"><span class="eyebrow">Original</span><canvas class="wave" id="wRaw"></canvas><span class="eyebrow">Mit Fusion-X</span><canvas class="wave" id="wProc"></canvas></div>';
-    drawWave($('#wRaw'), rec.raw, '#8d98a4'); drawWave($('#wProc'), rec.proc, '#6c9bff');
+    drawWave($('#wRaw'), rec.raw, '#8d98a4'); drawWave($('#wProc'), rec.proc, FX_THEMES.color('voice'));
     var go = $('#trGo'); go.disabled = false; go.innerHTML = ic('play', 'sm') + 'Abspielen';
     var which = 'proc', playing = null;
     $$('[data-ab]', dlg).forEach(function (b) { b.onclick = function () { which = b.dataset.ab; $$('[data-ab]', dlg).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); if (playing) { playing.ga.gain.setTargetAtTime(which === 'raw' ? 1 : 0, playing.ctx.currentTime, 0.01); playing.gb.gain.setTargetAtTime(which === 'proc' ? 1 : 0, playing.ctx.currentTime, 0.01); } }; });
@@ -2891,12 +3016,12 @@
     g.clearRect(0, 0, W, H);
     var n = WAVE.out.length, bw = W / n, mid = H / 2;
     var gr = g.createLinearGradient(0, 0, W, 0);
-    gr.addColorStop(0, 'rgba(46,230,214,0)'); gr.addColorStop(0.35, 'rgba(46,230,214,.9)'); gr.addColorStop(1, 'rgba(43,140,255,1)');
+    gr.addColorStop(0, FX_THEMES.color('accent', 0)); gr.addColorStop(0.35, FX_THEMES.color('accent', .9)); gr.addColorStop(1, FX_THEMES.color('accent2', 1));
     g.fillStyle = gr;
     for (var i = 0; i < n; i++) { var h = Math.max(0.6, Math.sqrt(WAVE.out[i]) * (mid - 2)); g.fillRect(i * bw, mid - h, Math.max(1, bw - 1), h * 2); }
     var lg = g.createLinearGradient(0, 0, W, 0);
     lg.addColorStop(0, 'rgba(155,185,255,0)'); lg.addColorStop(0.4, 'rgba(155,185,255,.95)'); lg.addColorStop(1, '#c4d5ff');
-    g.strokeStyle = lg; g.lineWidth = 1.6; g.shadowColor = 'rgba(108,155,255,.9)'; g.shadowBlur = 6;
+    g.strokeStyle = lg; g.lineWidth = 1.6; g.shadowColor = FX_THEMES.color('voice', .9); g.shadowBlur = 6;
     g.beginPath();
     for (var j = 0; j < n; j++) { var a = Math.sqrt(WAVE.voice[j]) * (mid - 3), y = mid + Math.sin(j * 0.9 + now / 120) * a; if (j) g.lineTo(j * bw, y); else g.moveTo(0, y); }
     g.stroke(); g.shadowBlur = 0;
@@ -2926,6 +3051,7 @@
     S.platform = init.platform; S.version = init.version; S.community = init.community || {}; S.backend = init.backend || { ok: false }; S.autostart = init.autostart;
     S.settings = deepMerge(DEFAULTS, init.settings || {});
     applyLang();
+    initTheme();
     // Engine bekommt immer die sparsame Fassung, wenn die bearbeitete Stimme gerade niemand hört
     (function () {
       var eng = S.engine, up = eng.update.bind(eng), st = eng.start.bind(eng);
@@ -2988,6 +3114,8 @@
     if (S.demo && !S.settings.activeProfile) { S.settings.activeProfile = 'gaming'; renderTop(); }
     if (!S.settings.onboarded && !S.demo) setTimeout(openWizard, 400);
     checkWhatsNew();
+    // Nur in der Browser-Vorschau: Update-Fenster zum Testen auslösen
+    if (S.demo) window.FX_DEBUG = { update: function (u) { S.demoUpdate = true; S.settings.onboarded = true; if (!/^\d/.test(S.version || '')) S.version = '1.3.0'; onUpdate(u); } };
     navigator.mediaDevices && navigator.mediaDevices.addEventListener && navigator.mediaDevices.addEventListener('devicechange', refreshBrowserDevices);
   }
 
