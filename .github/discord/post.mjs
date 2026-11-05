@@ -20,4 +20,14 @@ const msg = buildAnnouncement({ template: key, title: env('TITEL'), text: lines(
   { version, channels, pingRoleId: ping && ping.id });
 const posted = await api('POST', '/channels/' + target.id + '/messages', msg);
 if (target.type === 5) await api('POST', '/channels/' + target.id + '/messages/' + posted.id + '/crosspost', undefined, { quiet: true });
+// Optional: echte Discord-Umfrage direkt unter der Ankündigung
+if (env('FRAGE') && env('ANTWORTEN')) {
+  const answers = env('ANTWORTEN').split(/\s*\/\/\s*/).filter(Boolean).slice(0, 10).map((a) => {
+    const m = a.match(/^(\p{Extended_Pictographic}\uFE0F?)\s*(.+)$/u);
+    return { poll_media: m ? { text: m[2].slice(0, 55), emoji: { name: m[1] } } : { text: a.slice(0, 55) } };
+  });
+  const days = Math.min(32, Math.max(1, parseInt(env('DAUER'), 10) || 7));
+  await api('POST', '/channels/' + target.id + '/messages', { poll: { question: { text: env('FRAGE').slice(0, 300) }, answers, duration: days * 24, allow_multiselect: false, layout_type: 1 } });
+  summary('📊 Umfrage mit ' + answers.length + ' Antworten, läuft ' + days + ' Tage');
+}
 summary('✅ Ankündigung gepostet in **#' + target.name + '**: https://discord.com/channels/' + GUILD + '/' + target.id + '/' + posted.id);

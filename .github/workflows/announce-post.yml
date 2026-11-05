@@ -31,6 +31,16 @@ on:
         description: Kanal (Standard ankündigungen)
         required: false
         default: ankündigungen
+      frage:
+        description: "Umfrage (optional): Frage"
+        required: false
+      antworten:
+        description: "Umfrage: Antworten, getrennt mit // (z. B. ✅ Ja // ❌ Nein)"
+        required: false
+      dauer:
+        description: "Umfrage: Dauer in Tagen (1–32)"
+        required: false
+        default: "7"
 
 permissions:
   contents: read
@@ -54,3 +64,6 @@ jobs:
           BUTTON: ${{ inputs.button }}
           BILD: ${{ inputs.bild }}
           KANAL: ${{ inputs.kanal }}
+          FRAGE: ${{ inputs.frage }}
+          ANTWORTEN: ${{ inputs.antworten }}
+          DAUER: ${{ inputs.dauer }}
