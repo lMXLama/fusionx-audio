@@ -1,7 +1,9 @@
 // Fusion-X Discord-Bot: hält den Bot online, zeigt einen Status, beantwortet Slash-Befehle
 // und begrüßt neue Beiträge in den Support-Foren. Start: npm install && npm start
-import { Client, GatewayIntentBits, ActivityType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, SlashCommandBuilder, MessageFlags, Events } from 'discord.js';
+import { Client, GatewayIntentBits, ActivityType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, SlashCommandBuilder, ContextMenuCommandBuilder, ApplicationCommandType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, Events } from 'discord.js';
 import { readFileSync, existsSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { TEMPLATES, buildAnnouncement, templateFromFooter } from './templates.mjs';
 
 // .env (falls vorhanden) einlesen, ohne zusätzliches Paket
 if (existsSync(new URL('./.env', import.meta.url))) {
@@ -63,8 +65,122 @@ const commands = [
       .addChoices(...Object.entries(FAQ).map(([value, [name]]) => ({ name, value })))),
   new SlashCommandBuilder().setName('changelog').setDescription('Was ist neu in der aktuellen Version?'),
   new SlashCommandBuilder().setName('bug').setDescription('So meldest du einen Fehler richtig'),
-  new SlashCommandBuilder().setName('diagnose').setDescription('So kopierst du die technischen Infos aus der App')
+  new SlashCommandBuilder().setName('diagnose').setDescription('So kopierst du die technischen Infos aus der App'),
+  new SlashCommandBuilder().setName('ankündigung').setDescription('Ankündigung im Fusion-X-Stil schreiben (nur Team)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .addStringOption((o) => o.setName('vorlage').setDescription('Welche Art von Ankündigung?').setRequired(true)
+      .addChoices(...Object.entries(TEMPLATES).map(([value, t]) => ({ name: t.emoji + ' ' + t.name, value }))))
+    .addStringOption((o) => o.setName('ping').setDescription('Wer soll benachrichtigt werden? (Standard je nach Vorlage)')
+      .addChoices({ name: 'Niemand', value: 'none' }, { name: 'Rolle Update-Ping', value: 'update' }, { name: 'Alle (@everyone)', value: 'everyone' }))
+    .addChannelOption((o) => o.setName('kanal').setDescription('Wohin? (Standard: Ankündigungen)').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)),
+  new ContextMenuCommandBuilder().setName('Ankündigung bearbeiten').setType(ApplicationCommandType.Message)
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
 ].map((c) => c.toJSON());
+
+// ------------------------------------------------------------ Ankündigungen schreiben
+const drafts = new Map(); // id → Entwurf, wird nach einer Stunde vergessen
+const PING_NAME = { none: 'niemand', update: 'Rolle Update-Ping', everyone: '@everyone' };
+function draftModal(id, d, title) {
+  const t = TEMPLATES[d.template];
+  const input = (cid, label, style, value, required, max, placeholder) => {
+    const x = new TextInputBuilder().setCustomId(cid).setLabel(label).setStyle(style).setRequired(required).setMaxLength(max);
+    if (value) x.setValue(String(value).slice(0, max));
+    if (placeholder) x.setPlaceholder(placeholder);
+    return new ActionRowBuilder().addComponents(x);
+  };
+  return new ModalBuilder().setCustomId(id).setTitle((title || t.emoji + ' ' + t.name).slice(0, 45)).addComponents(
+    input('title', 'Überschrift', TextInputStyle.Short, d.title, false, 200, 'z. B. Fusion-X Audio {version} ist da'),
+    input('text', 'Text', TextInputStyle.Paragraph, d.text, true, 4000, '**fett**, *kursiv*, • Aufzählung, #hilfe wird zum Kanal-Link'),
+    input('image', 'Bild unter dem Text (Link, optional)', TextInputStyle.Short, d.image, false, 500, 'https://…'),
+    input('button', 'Button (optional): Text | Link', TextInputStyle.Short, d.button, false, 300, 'Herunterladen | https://…')
+  );
+}
+const readModal = (i, d) => Object.assign(d, {
+  title: i.fields.getTextInputValue('title'), text: i.fields.getTextInputValue('text'),
+  image: i.fields.getTextInputValue('image'), button: i.fields.getTextInputValue('button')
+});
+async function buildFor(guild, d) {
+  const { version } = await info();
+  const ping = guild.roles.cache.find((r) => r.name === 'Update-Ping');
+  return buildAnnouncement(d, { version, channels: [...guild.channels.cache.values()], pingRoleId: ping && ping.id });
+}
+async function preview(i, id) {
+  const d = drafts.get(id);
+  const msg = await buildFor(i.guild, d);
+  const controls = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('ann:pub:' + id).setStyle(ButtonStyle.Success).setLabel('Veröffentlichen').setEmoji('✅'),
+    new ButtonBuilder().setCustomId('ann:edit:' + id).setStyle(ButtonStyle.Secondary).setLabel('Bearbeiten').setEmoji('✏️'),
+    new ButtonBuilder().setCustomId('ann:cancel:' + id).setStyle(ButtonStyle.Danger).setLabel('Verwerfen')
+  );
+  const payload = {
+    content: '**Vorschau** · nur du siehst das · Ziel: <#' + d.channelId + '> · Benachrichtigt: ' + PING_NAME[d.ping],
+    embeds: msg.embeds, components: [...msg.components, controls], allowed_mentions: { parse: [] }
+  };
+  return i.isFromMessage && i.isFromMessage() ? i.update(payload) : i.reply({ ...payload, flags: MessageFlags.Ephemeral });
+}
+const isTeam = (i) => i.memberPermissions && i.memberPermissions.has(PermissionFlagsBits.ManageGuild);
+
+async function handleAnnouncement(i) {
+  // /ankündigung → Formular mit Vorlage öffnen
+  if (i.isChatInputCommand() && i.commandName === 'ankündigung') {
+    if (!isTeam(i)) return i.reply({ flags: MessageFlags.Ephemeral, content: 'Das darf nur das Team.' });
+    const template = i.options.getString('vorlage');
+    const t = TEMPLATES[template];
+    const target = i.options.getChannel('kanal') || findChannel(i.guild, 'ankündigungen');
+    if (!target) return i.reply({ flags: MessageFlags.Ephemeral, content: 'Kein Ankündigungs-Kanal gefunden. Bitte mit „kanal“ einen auswählen.' });
+    const id = randomUUID().slice(0, 8);
+    drafts.set(id, { template, title: t.title, text: t.text, image: '', button: t.button || '', ping: i.options.getString('ping') || t.ping, channelId: target.id, userId: i.user.id });
+    setTimeout(() => drafts.delete(id), 60 * 60e3);
+    return i.showModal(draftModal('ann:form:' + id, drafts.get(id)));
+  }
+  // Rechtsklick auf eine veröffentlichte Ankündigung → bearbeiten
+  if (i.isMessageContextMenuCommand() && i.commandName === 'Ankündigung bearbeiten') {
+    if (!isTeam(i)) return i.reply({ flags: MessageFlags.Ephemeral, content: 'Das darf nur das Team.' });
+    const m = i.targetMessage;
+    const e = m.embeds[1];
+    const template = m.author.id === client.user.id && e && e.footer && templateFromFooter(e.footer.text);
+    if (!template) return i.reply({ flags: MessageFlags.Ephemeral, content: 'Das ist keine Ankündigung von /ankündigung.' });
+    const t = TEMPLATES[template];
+    const btn = m.components[0] && m.components[0].components[0];
+    const id = randomUUID().slice(0, 8);
+    drafts.set(id, { template, messageId: m.id, channelId: m.channelId, userId: i.user.id, ping: 'none',
+      title: String(e.title || '').replace(t.emoji, '').trim(), text: (e.description === '…' ? '' : (e.description || '')).replace(/<#(\d+)>/g, (x, cid) => { const c = i.guild.channels.cache.get(cid); return c ? '#' + c.name.split('┃').pop() : x; }),
+      image: e.image ? e.image.url : '', button: btn && btn.url ? btn.label + ' | ' + btn.url : '' });
+    setTimeout(() => drafts.delete(id), 60 * 60e3);
+    return i.showModal(draftModal('ann:editpub:' + id, drafts.get(id), 'Ankündigung bearbeiten'));
+  }
+  if (i.isModalSubmit() && i.customId.startsWith('ann:')) {
+    const [, kind, id] = i.customId.split(':');
+    const d = drafts.get(id);
+    if (!d) return i.reply({ flags: MessageFlags.Ephemeral, content: 'Der Entwurf ist abgelaufen. Bitte /ankündigung neu starten.' });
+    readModal(i, d);
+    if (kind === 'editpub') {
+      const ch = await i.guild.channels.fetch(d.channelId);
+      const msg = await ch.messages.fetch(d.messageId);
+      const built = await buildFor(i.guild, d);
+      built.embeds[1].timestamp = msg.embeds[1] && msg.embeds[1].timestamp ? msg.embeds[1].timestamp : built.embeds[1].timestamp;
+      await msg.edit({ embeds: built.embeds, components: built.components });
+      drafts.delete(id);
+      return i.reply({ flags: MessageFlags.Ephemeral, content: '✅ Ankündigung aktualisiert: ' + msg.url });
+    }
+    return preview(i, id);
+  }
+  if (i.isButton() && i.customId.startsWith('ann:')) {
+    const [, kind, id] = i.customId.split(':');
+    const d = drafts.get(id);
+    if (!d) return i.update({ content: 'Der Entwurf ist abgelaufen. Bitte /ankündigung neu starten.', embeds: [], components: [] });
+    if (kind === 'edit') return i.showModal(draftModal('ann:form:' + id, d));
+    if (kind === 'cancel') { drafts.delete(id); return i.update({ content: 'Entwurf verworfen.', embeds: [], components: [] }); }
+    if (kind === 'pub') {
+      const ch = await i.guild.channels.fetch(d.channelId);
+      const msg = await ch.send(await buildFor(i.guild, d));
+      if (ch.type === ChannelType.GuildAnnouncement) await msg.crosspost().catch(() => {});
+      drafts.delete(id);
+      return i.update({ content: '✅ Veröffentlicht: ' + msg.url + '\nÄndern kannst du sie später mit Rechtsklick auf die Nachricht → Apps → **Ankündigung bearbeiten**.', embeds: [], components: [] });
+    }
+  }
+  return false;
+}
 
 const findChannel = (guild, part) => guild.channels.cache.find((c) => c.name.includes(part));
 const mention = (guild, part) => { const c = findChannel(guild, part); return c ? '<#' + c.id + '>' : '#' + part; };
@@ -129,8 +245,9 @@ client.once(Events.ClientReady, async () => {
 });
 
 client.on(Events.InteractionCreate, async (i) => {
-  if (!i.isChatInputCommand()) return;
-  try { await handle(i); }
+  const isAnn = (i.isChatInputCommand() && i.commandName === 'ankündigung') || i.isMessageContextMenuCommand() || ((i.isModalSubmit() || i.isButton()) && i.customId.startsWith('ann:'));
+  if (!isAnn && !i.isChatInputCommand()) return;
+  try { if (isAnn) await handleAnnouncement(i); else await handle(i); }
   catch (e) {
     console.log('Befehl /' + i.commandName + ': ' + e.message);
     if (!i.replied) i.reply({ flags: MessageFlags.Ephemeral, content: 'Da ist etwas schiefgelaufen. Bitte versuch es gleich noch einmal.' }).catch(() => {});

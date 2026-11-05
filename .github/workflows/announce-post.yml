@@ -1,0 +1,56 @@
+# Ankündigung im Fusion-X-Stil posten, falls der Bot gerade nicht online ist.
+# Actions → „Ankündigung posten“ → Run workflow. Zeilenumbruch im Text: //
+name: Ankündigung posten
+
+on:
+  workflow_dispatch:
+    inputs:
+      vorlage:
+        description: Vorlage
+        type: choice
+        options: [Neuigkeit, Update, Wichtiger Hinweis, Event, Feedback gesucht]
+        default: Neuigkeit
+      titel:
+        description: Überschrift ({version} = aktuelle Version)
+        required: false
+      text:
+        description: Text (// = neue Zeile, **fett**, #hilfe wird zum Kanal-Link)
+        required: true
+      ping:
+        description: Wer wird benachrichtigt?
+        type: choice
+        options: [Niemand, Rolle Update-Ping, Alle (@everyone)]
+        default: Niemand
+      button:
+        description: "Button (optional): Text | Link"
+        required: false
+      bild:
+        description: Bild unter dem Text (Link, optional)
+        required: false
+      kanal:
+        description: Kanal (Standard ankündigungen)
+        required: false
+        default: ankündigungen
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node .github/discord/post.mjs
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID || vars.DISCORD_GUILD_ID }}
+          VORLAGE: ${{ inputs.vorlage }}
+          TITEL: ${{ inputs.titel }}
+          TEXT: ${{ inputs.text }}
+          PING: ${{ inputs.ping }}
+          BUTTON: ${{ inputs.button }}
+          BILD: ${{ inputs.bild }}
+          KANAL: ${{ inputs.kanal }}
