@@ -1,6 +1,4 @@
-- Problem melden: Fehler, Fragen und Ideen direkt aus der App an den Entwickler schicken, auch über das Tray-Menü
-- Offizieller Discord-Server mit Hilfe, FAQ und allen Neuigkeiten, beitreten in den Einstellungen
-- Diagnose kopieren: technische Infos mit einem Klick, falls du im Discord Hilfe suchst
-- EN: Report a problem: send bugs, questions and ideas straight from the app to the developer, also from the tray menu
-- EN: Official Discord server with help, FAQ and all the news, join from Settings
-- EN: Copy diagnostics: technical info in one click if you ask for help on Discord
+- Mit Windows starten lässt sich jetzt wieder einschalten und bleibt eingeschaltet
+- Tipp auf der Mikrofon-Seite: So hört man dich beim Bildschirm teilen in Discord nicht doppelt
+- EN: Start with Windows can be switched on again and stays on
+- EN: Tip on the Microphone page: how to avoid others hearing you twice when you share your screen on Discord

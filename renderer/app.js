@@ -1017,6 +1017,7 @@
     var head = '<section class="card"><h2>' + ic('route') + 'Wohin geht deine Stimme?</h2>';
     if (st.virtualMicActive && vp) {
       return head + '<div class="notice ok" style="margin-top:12px">' + ic('check') + '<div><b>Alle Apps hören deine bearbeitete Stimme</b>Windows nutzt jetzt „' + esc(devTitle(vp.inp)) + '“ als Mikrofon. In Discord, OBS, Teams und Spielen das Eingabegerät einfach auf <b style="display:inline">Standard</b> lassen.</div></div>' +
+        '<div class="notice info" style="margin-top:10px">' + ic('info') + '<div><b>Bildschirm teilen in Discord</b>Wähle beim Teilen ein <b style="display:inline">Fenster</b>, zum Beispiel dein Spiel, statt „Gesamter Bildschirm“. Beim ganzen Bildschirm nimmt Discord jeden Ton deines PCs auf, auch deine Stimme, und die anderen hören dich doppelt.</div></div>' +
         '<div class="row" style="margin-top:12px"><button class="btn sm ghost" data-act="vmOff">Ausschalten</button></div></section>';
     }
     if (vp) {
@@ -1362,6 +1363,10 @@
 
   // ------------------------------------------------------------------ Was ist neu (nach jedem Update einmal)
   var CHANGELOG = [
+    { v: '1.2.2', items: [
+      ['fix', 'Mit Windows starten lässt sich jetzt wieder einschalten und bleibt eingeschaltet'],
+      ['new', 'Tipp auf der Mikrofon-Seite: So hört man dich beim Bildschirm teilen in Discord nicht doppelt']
+    ] },
     { v: '1.2.1', items: [
       ['new', 'Problem melden: Fehler, Fragen und Ideen direkt aus der App an den Entwickler schicken, auch über das Tray-Menü'],
       ['new', 'Offizieller Discord-Server mit Hilfe, FAQ und allen Neuigkeiten. Beitreten in den Einstellungen'],

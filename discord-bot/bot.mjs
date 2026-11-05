@@ -47,6 +47,7 @@ const FAQ = {
   kostenlos: ['Ist Fusion-X wirklich kostenlos?', 'Ja. Kein Abo, keine Werbung, kein Konto. Der Quellcode ist offen auf [GitHub](https://github.com/' + REPO + ').'],
   smartscreen: ['Windows warnt beim Installieren', 'Das ist normal bei Programmen ohne kostenpflichtige Signatur. Klick auf **Weitere Informationen → Trotzdem ausführen**.'],
   discord: ['Discord hört meine bearbeitete Stimme nicht', 'In Fusion-X auf der Seite **Mikrofon** auf **Für alle Apps aktivieren** klicken. In Discord als Eingabegerät **Standard** wählen.'],
+  teilen: ['Beim Bildschirm teilen hört man mich doppelt', 'Wähle in Discord beim Teilen ein **Fenster** (z. B. dein Spiel) statt **Gesamter Bildschirm**. Beim ganzen Bildschirm nimmt Discord jeden Ton deines PCs auf, auch deine Stimme.'],
   streammix: ['Stream-Mix einrichten', 'In OBS (ab Version 28) unter **Werkzeuge → WebSocket-Servereinstellungen** den Server aktivieren und das Passwort in Fusion-X auf der Seite **Stream-Mix** einfügen.'],
   equalizer: ['Equalizer einrichten', 'Auf der Seite **Equalizer** Equalizer APO herunterladen, beim Installieren Kopfhörer und Lautsprecher anhaken und den PC neu starten.'],
   interface: ['Brauche ich ein Audio-Interface?', 'Nein. Fusion-X funktioniert mit jedem Headset, USB-Mikrofon und Laptop-Mikrofon.'],

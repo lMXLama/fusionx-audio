@@ -215,6 +215,7 @@ await post(faq, 'Fusion-X Audio · Häufige Fragen', { embeds: [bannerEmbed('faq
     { name: 'Windows warnt beim Installieren. Ist das sicher?', value: 'Ja. Windows warnt bei jedem Programm ohne kostenpflichtige digitale Signatur. Klick auf **Weitere Informationen → Trotzdem ausführen**.' },
     { name: 'Brauche ich ein Audio-Interface?', value: 'Nein. Fusion-X funktioniert mit jedem Headset, USB-Mikrofon und Laptop-Mikrofon. Mit Interface bekommst du zusätzlich Kanalwahl und passende Tipps.' },
     { name: 'Discord hört meine bearbeitete Stimme nicht.', value: 'In Fusion-X auf der Seite **Mikrofon** auf **Für alle Apps aktivieren** klicken. In Discord als Eingabegerät **Standard** auswählen.' },
+    { name: 'Beim Bildschirm teilen hört man mich doppelt.', value: 'Wähle in Discord beim Teilen ein **Fenster** (z. B. dein Spiel) statt **Gesamter Bildschirm**. Beim ganzen Bildschirm nimmt Discord jeden Ton deines PCs auf, auch deine Stimme.' },
     { name: 'Wie richte ich den Stream-Mix ein?', value: 'In OBS (ab Version 28) unter **Werkzeuge → WebSocket-Servereinstellungen** den Server aktivieren und das Passwort in Fusion-X einfügen.' },
     { name: 'Wie bekomme ich den Equalizer?', value: 'Auf der Seite **Equalizer** Equalizer APO herunterladen, beim Installieren Kopfhörer und Lautsprecher anhaken und den PC neu starten.' },
     { name: 'Wie bekomme ich Updates?', value: 'Automatisch. Fusion-X lädt neue Versionen im Hintergrund und installiert sie beim Beenden. Mit der Rolle <@&' + R.ping.id + '> wirst du hier zusätzlich benachrichtigt.' },

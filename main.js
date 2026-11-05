@@ -47,6 +47,16 @@ const logLine = (m) => { helperLog.push(new Date().toISOString().slice(11, 19) +
 
 const IS_WIN = process.platform === 'win32';
 const START_HIDDEN = process.argv.includes('--hidden');
+// Windows meldet den Autostart nur als aktiv, wenn man mit denselben Start-Argumenten fragt,
+// mit denen er eingetragen wurde. Ohne die Argumente kam immer „aus“ zurück und der Schalter sprang zurück.
+const LOGIN_ARGS = ['--hidden'];
+function autostartOn() {
+  try {
+    const s = app.getLoginItemSettings({ args: LOGIN_ARGS });
+    // Im Task-Manager deaktiviert zählt als aus
+    return !!s.openAtLogin && s.executableWillLaunchAtLogin !== false;
+  } catch (_) { return false; }
+}
 
 // Renderer über ein eigenes, sicheres Protokoll laden (nötig für AudioWorklets und WebAssembly)
 protocol.registerSchemesAsPrivileged([
@@ -295,7 +305,7 @@ function setupIpc() {
     acrylic: useAcrylic(),
     visible: winVisible,
     community: { invite: COMMUNITY.discordInvite || '', discord: !!COMMUNITY.reportWebhook },
-    autostart: app.getLoginItemSettings().openAtLogin
+    autostart: autostartOn()
   }));
   ipcMain.handle('fx:call', async (_e, cmd, args) => {
     if (!backend) throw new Error(backendError || 'Audio-Helfer nicht verfügbar');
@@ -315,9 +325,9 @@ function setupIpc() {
   });
   ipcMain.handle('fx:autostart', (_e, on) => {
     if (IS_WIN || process.platform === 'darwin') {
-      app.setLoginItemSettings({ openAtLogin: !!on, args: ['--hidden'] });
+      app.setLoginItemSettings({ openAtLogin: !!on, args: LOGIN_ARGS, enabled: !!on });
     }
-    return app.getLoginItemSettings().openAtLogin;
+    return autostartOn();
   });
   ipcMain.handle('fx:hotkeys', (_e, map) => registerHotkeys(map));
   ipcMain.handle('fx:tray', (_e, state) => { trayState = { ...trayState, ...state }; updateTray(); return true; });
