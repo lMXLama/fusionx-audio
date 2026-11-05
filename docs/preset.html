@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mikro-Einstellung übernehmen – Fusion-X Audio</title>
+<meta name="description" content="Eine geteilte Mikrofon-Einstellung mit einem Klick in Fusion-X Audio übernehmen.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/fusionx-audio/favicon.png">
+<link rel="stylesheet" href="/fusionx-audio/styles.css">
+<style>
+  .pp { min-height: 100vh; display: grid; place-items: center; padding: 32px 16px; }
+  .pcard { width: min(620px, 100%); padding: 30px; border-radius: 28px; background: var(--glass); box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 var(--hi), 0 30px 80px rgba(0, 0, 0, .45); }
+  .phead { display: flex; gap: 18px; align-items: center; }
+  .phead img { width: 64px; height: 64px; filter: drop-shadow(0 0 22px rgba(46, 230, 214, .5)); flex: none; }
+  .pbadge { display: inline-block; font: 600 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: #9bb9ff; padding: 3px 10px; border-radius: 999px; background: rgba(108, 155, 255, .14); box-shadow: inset 0 0 0 1px rgba(108, 155, 255, .35); }
+  .pcard h1 { font-size: clamp(26px, 5vw, 36px); letter-spacing: -.02em; margin: 8px 0 2px; line-height: 1.15; overflow-wrap: anywhere; }
+  .pby { color: var(--muted); margin: 0; overflow-wrap: anywhere; }
+  .pdesc { margin: 16px 0 0; overflow-wrap: anywhere; }
+  .psum { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
+  .psum div { padding: 11px 14px; border-radius: 14px; background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07); display: grid; gap: 2px; min-width: 0; }
+  .psum span { font-size: 13px; color: var(--muted); }
+  .psum b { font-size: 15px; font-weight: 600; }
+  .psum div:nth-child(3) { grid-column: 1 / -1; }
+  .pact { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+  .pnote { color: var(--muted); font-size: 14.5px; margin: 18px 0 0; }
+  .pcode { margin-top: 18px; display: none; }
+  .pcode textarea { width: 100%; box-sizing: border-box; resize: none; font: 13px/1.5 var(--mono, monospace); word-break: break-all; color: var(--fg); background: rgba(0, 0, 0, .3); border: 0; border-radius: 12px; padding: 12px; box-shadow: inset 0 0 0 1px var(--line); }
+  .perr { text-align: center; }
+  @media (max-width: 520px) { .pcard { padding: 22px; } .psum { grid-template-columns: 1fr; } .psum div:nth-child(3) { grid-column: auto; } .phead img { width: 52px; height: 52px; } }
+</style>
+</head>
+<body>
+<main class="pp">
+  <div class="pcard" id="card">
+    <div class="phead"><img src="/fusionx-audio/img/emblem.webp" alt=""><div><span class="pbadge">Mikro-Einstellung</span><h1 id="name">Wird geladen …</h1><p class="pby" id="by"></p></div></div>
+    <p class="pdesc" id="desc" hidden></p>
+    <div class="psum" id="sum"></div>
+    <div class="pact">
+      <a class="btn big primary" id="open" href="#"><span><b>In Fusion-X übernehmen</b><small>Öffnet die App auf deinem PC</small></span></a>
+      <button class="btn small ghost" id="copy" type="button">Code kopieren</button>
+    </div>
+    <p class="pnote">Dein Browser fragt, ob er Fusion-X öffnen darf. Dort kannst du die Einstellung erst ausprobieren und dann speichern. Lautstärke und die Schwelle der Störgeräusch-Sperre bleiben deine eigenen.</p>
+    <div class="pcode" id="codebox"><textarea id="code" rows="3" readonly></textarea></div>
+    <p class="pnote">Noch kein Fusion-X? <a href="/fusionx-audio/#download">Kostenlos für Windows herunterladen</a></p>
+  </div>
+</main>
+<script src="/fusionx-audio/fxcode.js"></script>
+<script>
+(function () {
+  var code = FXCODE.extract(decodeURIComponent(location.hash || ''));
+  var $ = function (id) { return document.getElementById(id); };
+  function fail(msg) {
+    $('card').innerHTML = '<div class="perr"><h1>Hier ist leider nichts.</h1><p class="pby">' + msg + '</p><p class="pnote"><a href="/fusionx-audio/">Zur Startseite</a></p></div>';
+  }
+  if (!code) return fail('Der Link enthält keinen gültigen Fusion-X-Code.');
+  FXCODE.decode(code).then(function (r) {
+    var m = r.meta;
+    document.title = m.name + ' – Mikro-Einstellung für Fusion-X Audio';
+    $('name').textContent = m.name;
+    $('by').textContent = [m.author ? 'von ' + m.author : '', m.mic].filter(Boolean).join(' · ') || 'Geteilte Einstellung';
+    if (m.desc) { $('desc').hidden = false; $('desc').textContent = m.desc; }
+    $('sum').innerHTML = '';
+    FXCODE.summary(r.data).forEach(function (x) {
+      var d = document.createElement('div'), s = document.createElement('span'), b = document.createElement('b');
+      s.textContent = x[0]; b.textContent = x[1]; d.appendChild(s); d.appendChild(b); $('sum').appendChild(d);
+    });
+    var url = 'fusionx://preset/' + r.code;
+    $('open').href = url;
+    $('code').value = r.code;
+    $('copy').onclick = function () {
+      $('codebox').style.display = 'block';
+      (navigator.clipboard ? navigator.clipboard.writeText(r.code) : Promise.reject()).then(function () { $('copy').textContent = 'Kopiert ✓'; }, function () { $('code').select(); });
+    };
+  }).catch(function (e) { fail(e.message); });
+})();
+</script>
+</body>
+</html>

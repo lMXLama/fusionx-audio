@@ -44,5 +44,7 @@ contextBridge.exposeInMainWorld('fx', {
   update: (op, val) => ipcRenderer.invoke('fx:update', op, val),
   onUpdate: on('fx:update'),
   onVisible: on('fx:visible'),
-  report: (r) => ipcRenderer.invoke('fx:report', r)
+  report: (r) => ipcRenderer.invoke('fx:report', r),
+  sharePreset: (p) => ipcRenderer.invoke('fx:sharePreset', p),
+  onLink: on('fx:link')
 });

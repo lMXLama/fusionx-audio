@@ -1,4 +1,16 @@
 {
+  "1.4.0": {
+    "de": [
+      "Mikrofon-Profile: speichern, wechseln und per Code oder im Discord teilen",
+      "Mikro-Settings aus dem Discord mit einem Klick übernehmen",
+      "Mehr Feineinstellungen im Profi-Modus, Werte direkt eintippbar"
+    ],
+    "en": [
+      "Mic profiles: save, switch and share by code or on Discord",
+      "Apply mic settings from Discord with one click",
+      "More fine-tuning in Pro mode, values can be typed in directly"
+    ]
+  },
   "1.3.0": {
     "de": [
       "Update-Fenster beim Start: jetzt, später oder beim nächsten Start aktualisieren",

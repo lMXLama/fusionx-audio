@@ -13,13 +13,13 @@
     inputId: '',
     channel: 'auto',
     gainDb: 0,
-    hpf: { on: true, freq: 80 },
+    hpf: { on: true, freq: 80, slope: 12 },
     denoise: 'ai',
-    gate: { on: true, open: -50, close: -56, holdMs: 180, releaseMs: 140, floorDb: -60 },
+    gate: { on: true, open: -50, close: -56, holdMs: 180, attackMs: 2, releaseMs: 140, floorDb: -60 },
     eq: { on: true, low: { f: 120, g: 0 }, mid1: { f: 350, g: 0, q: 1 }, mid2: { f: 3000, g: 0, q: 1 }, high: { f: 9000, g: 0 } },
-    comp: { on: true, amount: 40, thr: -20, ratio: 3.3, att: 8, rel: 160, makeup: 3 },
+    comp: { on: true, amount: 40, thr: -20, ratio: 3.3, att: 8, rel: 160, makeup: 3, knee: 8 },
     deess: { on: false, amount: 40, freq: 6500 },
-    limiter: { on: true },
+    limiter: { on: true, ceiling: -1.5, release: 80 },
     outGainDb: 0,
     monitor: { on: false, device: '', volume: 0.8 },
     muted: false
@@ -28,7 +28,7 @@
   // Kompressor-Werte aus einem einzigen "Stärke"-Regler (0–100)
   function compFromAmount(a) {
     var thr = -10 - a * 0.26, ratio = 1.4 + a * 0.046;
-    return { amount: a, thr: Math.round(thr), ratio: Math.round(ratio * 10) / 10, att: 8, rel: 160, makeup: Math.round((-thr) * (1 - 1 / ratio) * 0.45 * 2) / 2 };
+    return { amount: a, thr: Math.round(thr), ratio: Math.round(ratio * 10) / 10, att: 8, rel: 160, makeup: Math.round((-thr) * (1 - 1 / ratio) * 0.45 * 2) / 2, knee: 8 };
   }
 
   var PRESETS = {
@@ -139,6 +139,7 @@
     n.inGain = c.createGain();
     n.anIn = c.createAnalyser(); n.anIn.fftSize = 1024;
     n.hpf = c.createBiquadFilter(); n.hpf.type = 'highpass'; n.hpf.Q.value = 0.707;
+    n.hpf2 = c.createBiquadFilter(); n.hpf2.type = 'highpass'; n.hpf2.Q.value = 0.707; // zweite Stufe für 24 dB/Oktave
     n.preDn = c.createGain(); n.postDn = c.createGain();
     n.voice = new AudioWorkletNode(c, 'fx-voice', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [1] });
     n.low = c.createBiquadFilter(); n.low.type = 'lowshelf';
@@ -159,7 +160,7 @@
     n.mono.connect(n.inGain);
     n.inGain.connect(n.anIn);
     n.inGain.connect(n.hpf);
-    n.hpf.connect(n.preDn);
+    n.hpf.connect(n.hpf2); n.hpf2.connect(n.preDn);
     n.preDn.connect(n.postDn);
     n.postDn.connect(n.voice);
     n.voice.connect(n.low); n.low.connect(n.mid1); n.mid1.connect(n.mid2); n.mid2.connect(n.high);
@@ -238,6 +239,7 @@
     this.applyChannel();
     set(n.inGain.gain, dbToLin(m.gainDb));
     set(n.hpf.frequency, m.hpf.on ? m.hpf.freq : 10);
+    set(n.hpf2.frequency, m.hpf.on && m.hpf.slope === 24 ? m.hpf.freq : 10);
     var eq = m.eq, on = eq.on;
     set(n.low.frequency, eq.low.f); set(n.low.gain, on ? eq.low.g : 0);
     set(n.mid1.frequency, eq.mid1.f); set(n.mid1.gain, on ? eq.mid1.g : 0); set(n.mid1.Q, eq.mid1.q || 1);
@@ -246,15 +248,15 @@
     var cp = m.comp;
     n.comp.threshold.value = cp.on ? cp.thr : 0;
     n.comp.ratio.value = cp.on ? cp.ratio : 1;
-    n.comp.knee.value = 8;
+    n.comp.knee.value = cp.knee != null ? cp.knee : 8;
     n.comp.attack.value = cp.att / 1000;
     n.comp.release.value = cp.rel / 1000;
     set(n.makeup.gain, dbToLin(cp.on ? cp.makeup : 0));
-    n.limit.threshold.value = m.limiter.on ? -1.5 : 0;
+    n.limit.threshold.value = m.limiter.on ? (m.limiter.ceiling != null ? m.limiter.ceiling : -1.5) : 0;
     n.limit.ratio.value = m.limiter.on ? 20 : 1;
     n.limit.knee.value = 0;
     n.limit.attack.value = 0.001;
-    n.limit.release.value = 0.08;
+    n.limit.release.value = (m.limiter.release || 80) / 1000;
     set(n.outGain.gain, (m.muted || this.pttMuted) ? 0 : dbToLin(m.outGainDb));
     set(n.monGain.gain, m.monitor.volume);
     n.voice.port.postMessage({ type: 'params', gate: m.gate, deess: m.deess, speakDb: Math.max(m.gate.open, -55) });

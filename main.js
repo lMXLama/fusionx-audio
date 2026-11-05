@@ -42,6 +42,68 @@ async function sendReport(r) {
     return { ok: true, via: 'discord' };
   } catch (e) { return { ok: false, error: 'Keine Verbindung zu Discord: ' + e.message }; }
 }
+// ------------------------------------------------------------------ Mikro-Settings teilen (Discord-Forum)
+const PRESET_PAGE = 'https://lmxlama.github.io/fusionx-audio/preset.html#';
+let lastPresetAt = 0, presetGuild = null;
+const clip = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').replace(/@(everyone|here)/gi, '@\u200b$1').trim().slice(0, n);
+async function sharePreset(p) {
+  const hook = COMMUNITY.presetWebhook;
+  if (!hook) return { ok: false, error: 'Öffentliches Teilen ist in dieser Version noch nicht eingerichtet. Teile den Code direkt.' };
+  const now = Date.now();
+  if (now - lastPresetAt < 120000) return { ok: false, error: 'Bitte warte zwei Minuten, bevor du die nächste Einstellung teilst.' };
+  const code = String(p.code || '');
+  if (!/^FX[01]-[A-Za-z0-9_-]{16,460}$/.test(code)) return { ok: false, error: 'Ungültiger Code.' };
+  const name = clip(p.name, 32) || 'Ohne Namen';
+  const catName = { allgemein: 'Allgemein', gaming: 'Gaming', streaming: 'Streaming', podcast: 'Podcast', musik: 'Musik' }[p.cat] || 'Allgemein';
+  const tag = (COMMUNITY.presetTags || {})[catName.toLowerCase()];
+  const fields = [
+    { name: '🎙️ Mikrofon', value: clip(p.mic, 40) || 'Nicht angegeben', inline: true },
+    { name: '👤 Erstellt von', value: clip(p.author, 24) || 'Anonym', inline: true },
+    { name: '🏷️ Kategorie', value: catName, inline: true }
+  ].concat((Array.isArray(p.summary) ? p.summary : []).slice(0, 6).map((x) => ({ name: clip(x[0], 40), value: clip(x[1], 120) || '–', inline: true })));
+  fields.push({ name: 'Code', value: '```' + code + '```' });
+  const body = {
+    thread_name: ('🎙️ ' + name + (p.mic ? ' · ' + clip(p.mic, 40) : '')).slice(0, 100),
+    applied_tags: tag ? [tag] : undefined,
+    username: 'Fusion-X Mikro-Settings',
+    allowed_mentions: { parse: [] },
+    embeds: [{
+      color: 0x6c9bff,
+      author: { name: 'Fusion-X Audio · Mikro-Settings', icon_url: 'https://raw.githubusercontent.com/lMXLama/fusionx-audio/main/renderer/brand/emblem.png' },
+      title: name, description: clip(p.desc, 80) || undefined, fields,
+      footer: { text: 'Fusion-X ' + app.getVersion() + ' · Lautstärke und Sperre-Schwelle passt jeder selbst an' },
+      timestamp: new Date().toISOString()
+    }],
+    components: [{ type: 1, components: [
+      { type: 2, style: 5, label: 'In Fusion-X übernehmen', emoji: { name: '🎚️' }, url: PRESET_PAGE + code },
+      { type: 2, style: 5, label: 'Fusion-X herunterladen', url: 'https://github.com/lMXLama/fusionx-audio/releases/latest' }
+    ] }]
+  };
+  try {
+    const res = await fetch(hook + (hook.includes('?') ? '&' : '?') + 'wait=true&with_components=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!res.ok) { logLine('Mikro-Settings: HTTP ' + res.status + ' ' + (await res.text()).slice(0, 200)); return { ok: false, error: 'Discord hat den Beitrag abgelehnt (' + res.status + ').' }; }
+    const msg = await res.json();
+    lastPresetAt = now;
+    if (!presetGuild) { try { presetGuild = (await (await fetch(hook)).json()).guild_id; } catch (_) {} }
+    return { ok: true, url: presetGuild ? 'https://discord.com/channels/' + presetGuild + '/' + msg.channel_id : '' };
+  } catch (e) { return { ok: false, error: 'Keine Verbindung zu Discord: ' + e.message }; }
+}
+
+// fusionx://preset/FX1-… (aus dem Discord-Knopf über die Website) an die Oberfläche geben
+let pendingLink = null;
+function linkFromArgv(argv) {
+  const a = (argv || []).find((x) => /^fusionx:/i.test(String(x)));
+  if (!a) return null;
+  let s = String(a); try { s = decodeURIComponent(s); } catch (_) {}
+  const m = s.match(/FX[01]-[A-Za-z0-9_-]{16,}/);
+  return m ? { type: 'preset', code: m[0] } : null;
+}
+function handleLink(link) {
+  if (!link) return;
+  if (win && !win.isDestroyed() && rendererReady) { showWindow(); send('fx:link', link); } else pendingLink = link;
+}
+let rendererReady = false;
+
 const helperLog = [];
 const logLine = (m) => { helperLog.push(new Date().toISOString().slice(11, 19) + '  ' + String(m).trim()); if (helperLog.length > 60) helperLog.shift(); };
 
@@ -305,7 +367,8 @@ function setupIpc() {
     settings,
     acrylic: useAcrylic(),
     visible: winVisible,
-    community: { invite: COMMUNITY.discordInvite || '', discord: !!COMMUNITY.reportWebhook },
+    community: { invite: COMMUNITY.discordInvite || '', discord: !!COMMUNITY.reportWebhook, presets: !!COMMUNITY.presetWebhook },
+    link: (() => { rendererReady = true; const l = pendingLink; pendingLink = null; return l; })(),
     autostart: autostartOn()
   }));
   ipcMain.handle('fx:call', async (_e, cmd, args) => {
@@ -392,6 +455,7 @@ function setupIpc() {
   // ---- Updates
   ipcMain.handle('fx:update', (_e, op, val) => updaterOp(op, val));
   ipcMain.handle('fx:report', (_e, r) => sendReport(r || {}));
+  ipcMain.handle('fx:sharePreset', (_e, p) => sharePreset(p || {}));
   ipcMain.handle('fx:window', (_e, action) => {
     if (action === 'hide') win.hide();
     if (action === 'quit') { quitting = true; app.quit(); }
@@ -477,7 +541,8 @@ async function updaterOp(op, val) {
 }
 
 // ------------------------------------------------------------------ Start
-app.on('second-instance', showWindow);
+app.on('second-instance', (_e, argv) => { showWindow(); handleLink(linkFromArgv(argv)); });
+pendingLink = linkFromArgv(process.argv);
 
 app.whenReady().then(async () => {
   loadSettings();
@@ -495,6 +560,8 @@ app.whenReady().then(async () => {
   ses.setPermissionRequestHandler((wc, permission, cb) => cb(['media', 'speaker-selection', 'audioCapture'].includes(permission)));
   ses.setPermissionCheckHandler((wc, permission) => ['media', 'speaker-selection', 'audioCapture'].includes(permission));
 
+  // Links wie fusionx://preset/… sollen Fusion-X öffnen
+  if (app.isPackaged) { try { app.setAsDefaultProtocolClient('fusionx', process.execPath, []); } catch (_) {} }
   await startBackend();
   setupIpc();
   createWindow();

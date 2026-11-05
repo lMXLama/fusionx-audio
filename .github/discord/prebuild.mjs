@@ -25,6 +25,17 @@ try {
     const h = hooks.find((x) => x.name === 'Fusion-X Meldungen' && x.token);
     if (h) { pkg.fusionx.reportWebhook = 'https://discord.com/api/webhooks/' + h.id + '/' + h.token; console.log('Webhook eingebaut.'); }
   }
+  // Webhook und Tags für „Mikro-Settings teilen“
+  const presets = channels.find((c) => c.name.includes('mikrofon-settings') && c.type === 15);
+  if (presets) {
+    const hooks = await api('GET', '/channels/' + presets.id + '/webhooks');
+    const h = hooks.find((x) => x.name === 'Fusion-X Mikro-Settings' && x.token);
+    if (h) {
+      pkg.fusionx.presetWebhook = 'https://discord.com/api/webhooks/' + h.id + '/' + h.token;
+      pkg.fusionx.presetTags = Object.fromEntries((presets.available_tags || []).filter((t) => !t.moderated).map((t) => [t.name.toLowerCase(), t.id]));
+      console.log('Mikro-Settings-Webhook eingebaut.');
+    }
+  }
   try { pkg.fusionx.discordInvite = JSON.parse(readFileSync('docs/community.json', 'utf8')).discord || pkg.fusionx.discordInvite; } catch (_) {}
   if (!pkg.fusionx.discordInvite && welcome) {
     const inv = await api('POST', '/channels/' + welcome.id + '/invites', { max_age: 0, max_uses: 0, unique: false });

@@ -1,6 +1,6 @@
-- Neues Update-Fenster: Beim Start siehst du sofort, was neu ist, und entscheidest: jetzt, später oder beim nächsten Start
-- Design wählen: 7 Farbstile in den Einstellungen, passend zum Fusion-X-Look
-- Update fragt jetzt auch nach, wenn „Automatisch aktualisieren“ aus ist
-- EN: New update window: on startup you see what’s new right away and decide: now, later or next start
-- EN: Pick a theme: 7 color styles in Settings that match the Fusion-X look
-- EN: Updates are now offered even when “Update automatically” is off
+- Mikrofon-Profile zum Wechseln, Teilen per Code und im Discord, Übernehmen mit einem Klick
+- Mehr Feineinstellungen im Profi-Modus: EQ-Bänder einzeln, Filter-Steilheit, Gate, Knee, Limiter
+- Jeden Wert genau eintippen: einfach auf die Zahl neben dem Regler klicken
+- EN: Mic profiles to switch between, share by code or on Discord, apply with one click
+- EN: More fine-tuning in Pro mode: individual EQ bands, filter slope, gate, knee, limiter
+- EN: Type any value exactly: just click the number next to the fader

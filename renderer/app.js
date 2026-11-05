@@ -31,6 +31,10 @@
     webcam: '<circle cx="12" cy="10" r="6"/><circle cx="12" cy="10" r="2"/><path d="M8 20h8M12 16v4"/>',
     duck: '<path d="M3 9.5v5h3.2l4.3 3.6V5.9L6.2 9.5H3z"/><path d="M17.5 5.5v10M14 12.5l3.5 3.5 3.5-3.5"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    share: '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/>',
+    trash: '<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10 11v5.5M14 11v5.5"/>',
+    copy: '<rect x="8" y="8" width="12" height="12" rx="2.2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>',
+    download: '<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/>',
     lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     power: '<path d="M12 3.5v8"/><path d="M7 6.3a7.5 7.5 0 1 0 10 0"/>',
@@ -168,6 +172,10 @@
     lang: 'auto',
     lastSeenVersion: '',
     theme: 'fusion',
+    micProfiles: [],
+    micProfile: null,
+    micTrial: null,
+    shareAuthor: '',
     ownerKey: '',
     themeColors: null,
     hardMuted: [],
@@ -695,6 +703,7 @@
       return '<button data-seg="' + name + '" data-val="' + esc(o[0]) + '" aria-pressed="' + (String(o[0]) === String(val)) + '">' + (o[2] ? ic(o[2], 'sm') : '') + esc(o[1]) + '</button>';
     }).join('') + '</div>';
   };
+  function fineHz(f) { return f >= 1000 ? (f / 1000).toFixed(2).replace(/\.?0+$/, '').replace('.', ',') + ' kHz' : Math.round(f) + ' Hz'; }
   var slider = function (id, label, min, max, step, val, out, cls) {
     return '<label class="slider"><span>' + esc(label) + '</span><input type="range" class="' + (cls || '') + '" id="' + id + '" data-range="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"><output id="' + id + '-out">' + esc(out) + '</output></label>';
   };
@@ -935,7 +944,7 @@
     var demoHint = S.demo && eng.state !== 'on' ? '<div class="notice info">' + ic('info') + '<div><b>Vorschau mit simulierten Geräten</b>Hier gibt es keinen echten Mikrofonzugriff. In der installierten Windows-App arbeitet diese Seite mit deinem echten Mikro.</div></div>' : '';
 
     v.innerHTML =
-      errHtml + demoHint +
+      errHtml + demoHint + trialBanner() +
       '<div class="split">' +
       '<div class="stack">' +
         '<section class="card voicehero">' +
@@ -964,6 +973,7 @@
         '<section class="card"><div class="chead"><div><h2>' + ic('star') + 'Klang-Vorlagen</h2><p class="lead">Ein Klick stellt alle Effekte passend ein. Danach kannst du alles feinjustieren.</p></div></div>' +
           '<div class="presetrow">' + Object.keys(E.PRESETS).map(function (k) { var p = E.PRESETS[k]; return '<button class="preset" data-preset="' + k + '" aria-pressed="' + (preset === k) + '"><b>' + esc(p.name) + '</b><span>' + esc(p.desc) + '</span></button>'; }).join('') + '</div>' +
         '</section>' +
+        micProfilesCard() +
         '<div class="grid cols2">' + fxCards(mic, pro, isIf) + '</div>' +
       '</div>' +
       '<div class="stack">' + virtualCard() + pttCard() + micTipCard(inDev) +
@@ -986,27 +996,43 @@
   };
 
   function fxCards(mic, pro, isIf) {
-    var gateSens = Math.round((mic.gate.open + 70) / 40 * 100);
+    var hyst = Math.max(1, Math.round(mic.gate.open - mic.gate.close));
+    var hz = function (f) { return f >= 1000 ? (f / 1000).toFixed(f >= 10000 ? 1 : 2).replace(/\.?0+$/, '').replace('.', ',') + ' kHz' : Math.round(f) + ' Hz'; };
+    var qtxt = function (q) { return String(Math.round(q * 100) / 100).replace('.', ','); };
     var cards = [];
     cards.push(fxCard('denoise', 'sparkle', 'Rauschunterdrückung', DENOISE_TXT[mic.denoise], true, null,
       seg('denoise', [['off', 'Aus'], ['light', 'Leicht'], ['ai', 'KI'], ['studio', 'KI Studio']], mic.denoise, 'amber')));
     cards.push(fxCard('gate', 'gate', 'Störgeräusch-Sperre', 'Schaltet dein Mikro in Sprechpausen stumm, damit Atmen und Tippen nicht durchkommen.', mic.gate.on, 'gate.on',
       '<div class="row between"><span class="livepill" id="gateLive"><i></i><span>Geschlossen</span></span><button class="btn sm ghost" data-act="gateAuto">' + ic('wand', 'sm') + 'Automatisch einstellen</button></div>' +
-      slider('gateSens', 'Schwelle', 0, 100, 1, gateSens, fmtDb(mic.gate.open)) +
-      (pro ? slider('gateRelease', 'Schließzeit', 40, 600, 10, mic.gate.releaseMs, mic.gate.releaseMs + ' ms') + slider('gateHold', 'Haltezeit', 20, 600, 10, mic.gate.holdMs, mic.gate.holdMs + ' ms') + slider('gateFloor', 'Absenkung', -80, -6, 1, mic.gate.floorDb, fmtDb(mic.gate.floorDb)) : '')));
+      slider('gateOpen', 'Schwelle', -75, -25, 1, mic.gate.open, fmtDb(mic.gate.open)) +
+      (pro ? slider('gateHyst', 'Schließt bei', 1, 15, 1, hyst, '−' + hyst + ' dB unter Schwelle') +
+        slider('gateAttack', 'Öffnungszeit', 0.5, 30, 0.5, mic.gate.attackMs || 2, String(mic.gate.attackMs || 2).replace('.', ',') + ' ms') +
+        slider('gateHold', 'Haltezeit', 20, 600, 10, mic.gate.holdMs, mic.gate.holdMs + ' ms') +
+        slider('gateRelease', 'Schließzeit', 40, 600, 10, mic.gate.releaseMs, mic.gate.releaseMs + ' ms') +
+        slider('gateFloor', 'Absenkung', -80, -6, 1, mic.gate.floorDb, fmtDb(mic.gate.floorDb)) : '')));
     cards.push(fxCard('eq', 'eq', 'Klang', pro ? 'Punkte in der Kurve ziehen. Mausrad auf einem Mittenpunkt ändert die Breite.' : 'Mehr Bass für Wärme, mehr Stimme für Verständlichkeit, mehr Glanz für Klarheit.', mic.eq.on, 'eq.on',
-      pro ? '<canvas class="eqcanvas" id="eqCanvas"></canvas>' + slider('hpfFreq', 'Trittschall-Filter', 20, 300, 5, mic.hpf.on ? mic.hpf.freq : 20, mic.hpf.on ? mic.hpf.freq + ' Hz' : 'Aus')
+      pro ? '<canvas class="eqcanvas" id="eqCanvas"></canvas>' + slider('hpfFreq', 'Trittschall-Filter', 20, 400, 5, mic.hpf.on ? mic.hpf.freq : 20, mic.hpf.on ? mic.hpf.freq + ' Hz' : 'Aus') +
+        '<div class="srow" style="padding:4px 0"><div class="t"><div>Filter-Steilheit</div><small>24 dB schneidet Rumpeln und Brummen härter ab</small></div>' + seg('hpfSlope', [['12', '12 dB'], ['24', '24 dB']], String(mic.hpf.slope || 12), 'amber') + '</div>' +
+        '<details class="fine"' + (S.fineOpen && S.fineOpen.eq ? ' open' : '') + ' data-fine="eq"><summary>' + ic('eq', 'sm') + 'Bänder einzeln einstellen</summary>' +
+          '<span class="eyebrow">Bass (Kuhschwanz)</span>' + slider('eqLowF', 'Frequenz', 40, 500, 5, mic.eq.low.f, hz(mic.eq.low.f)) + slider('eqLowG', 'Pegel', -12, 12, 0.5, mic.eq.low.g, fmtDb(mic.eq.low.g, true)) +
+          '<span class="eyebrow">Wärme (Glocke)</span>' + slider('eqM1F', 'Frequenz', 100, 2000, 10, mic.eq.mid1.f, hz(mic.eq.mid1.f)) + slider('eqM1G', 'Pegel', -12, 12, 0.5, mic.eq.mid1.g, fmtDb(mic.eq.mid1.g, true)) + slider('eqM1Q', 'Breite (Q)', 0.3, 6, 0.05, mic.eq.mid1.q || 1, qtxt(mic.eq.mid1.q || 1)) +
+          '<span class="eyebrow">Stimme (Glocke)</span>' + slider('eqM2F', 'Frequenz', 800, 8000, 50, mic.eq.mid2.f, hz(mic.eq.mid2.f)) + slider('eqM2G', 'Pegel', -12, 12, 0.5, mic.eq.mid2.g, fmtDb(mic.eq.mid2.g, true)) + slider('eqM2Q', 'Breite (Q)', 0.3, 6, 0.05, mic.eq.mid2.q || 1, qtxt(mic.eq.mid2.q || 1)) +
+          '<span class="eyebrow">Glanz (Kuhschwanz)</span>' + slider('eqHiF', 'Frequenz', 3000, 16000, 100, mic.eq.high.f, hz(mic.eq.high.f)) + slider('eqHiG', 'Pegel', -12, 12, 0.5, mic.eq.high.g, fmtDb(mic.eq.high.g, true)) +
+        '</details>'
         : slider('eqLow', 'Bass', -12, 12, 0.5, mic.eq.low.g, fmtDb(mic.eq.low.g, true)) + slider('eqMid', 'Stimme', -12, 12, 0.5, mic.eq.mid2.g, fmtDb(mic.eq.mid2.g, true)) + slider('eqHigh', 'Glanz', -12, 12, 0.5, mic.eq.high.g, fmtDb(mic.eq.high.g, true))));
     cards.push(fxCard('comp', 'comp', 'Gleichmäßige Lautstärke', 'Leise Stellen lauter, laute Stellen sanfter. Niemand muss am Regler drehen, wenn du lachst oder flüsterst.', mic.comp.on, 'comp.on',
       slider('compAmount', 'Stärke', 0, 100, 1, mic.comp.amount, mic.comp.amount + ' %') +
       (pro ? slider('compThr', 'Schwelle', -50, 0, 1, mic.comp.thr, fmtDb(mic.comp.thr)) + slider('compRatio', 'Verhältnis', 1, 12, 0.1, mic.comp.ratio, String(mic.comp.ratio).replace('.', ',') + ' : 1') +
-        slider('compAtt', 'Ansprechzeit', 1, 80, 1, mic.comp.att, mic.comp.att + ' ms') + slider('compRel', 'Rückkehr', 30, 800, 10, mic.comp.rel, mic.comp.rel + ' ms') + slider('compMakeup', 'Aufholen', 0, 18, 0.5, mic.comp.makeup, fmtDb(mic.comp.makeup, true)) : '') +
+        slider('compAtt', 'Ansprechzeit', 1, 80, 1, mic.comp.att, mic.comp.att + ' ms') + slider('compRel', 'Rückkehr', 30, 800, 10, mic.comp.rel, mic.comp.rel + ' ms') + slider('compMakeup', 'Aufholen', 0, 18, 0.5, mic.comp.makeup, fmtDb(mic.comp.makeup, true)) +
+        slider('compKnee', 'Übergang (Knee)', 0, 24, 1, mic.comp.knee != null ? mic.comp.knee : 8, (mic.comp.knee != null ? mic.comp.knee : 8) + ' dB') : '') +
       '<div class="row small muted" style="gap:10px"><span style="min-width:96px">Arbeitet gerade</span><div class="grbar" style="flex:1"><i id="compGr"></i></div></div>'));
     cards.push(fxCard('deess', 'deess', 'Zischlaute zähmen', 'Macht scharfe S- und Sch-Laute weicher. Hilft besonders bei hellen Mikrofonen.', mic.deess.on, 'deess.on',
       slider('deessAmount', 'Stärke', 0, 100, 1, mic.deess.amount, mic.deess.amount + ' %') +
       (pro ? slider('deessFreq', 'Frequenz', 3500, 10000, 100, mic.deess.freq, (mic.deess.freq / 1000).toFixed(1).replace('.', ',') + ' kHz') : '') +
       '<div class="row small muted" style="gap:10px"><span style="min-width:96px">Arbeitet gerade</span><div class="grbar" style="flex:1"><i id="deessGr"></i></div></div>'));
-    cards.push(fxCard('limiter', 'shield', 'Übersteuerungsschutz', 'Verhindert Verzerrungen, wenn du plötzlich laut wirst oder schreist.', mic.limiter.on, 'limiter.on', ''));
+    var lc = mic.limiter.ceiling != null ? mic.limiter.ceiling : -1.5, lr = mic.limiter.release || 80;
+    cards.push(fxCard('limiter', 'shield', 'Übersteuerungsschutz', 'Verhindert Verzerrungen, wenn du plötzlich laut wirst oder schreist.', mic.limiter.on, 'limiter.on',
+      pro ? slider('limCeil', 'Obergrenze', -12, 0, 0.5, lc, fmtDb(lc)) + slider('limRel', 'Rückkehr', 20, 500, 10, lr, lr + ' ms') : ''));
     var mons = physicalRenders();
     cards.push(fxCard('monitor', 'headphones', 'Mithören', isIf ? 'Hör dich selbst mit allen Effekten. Für Mithören ohne jede Verzögerung nutze die Direct-Monitor-Funktion an deinem Interface.' : 'Hör dich selbst mit allen Effekten, um den Klang zu beurteilen. Leichte Verzögerung ist normal.', mic.monitor.on, 'monitor.on',
       '<label class="slider"><span>Abspielen über</span><select class="select" id="monDev">' + deviceOptions(mons, mic.monitor.device, '<option value="">Standard-Ausgabe</option>') + '</select><span></span></label>' +
@@ -1205,7 +1231,7 @@
       mic.preset = null;
       S.engine.update(mic); drawEq();
     });
-    var end = function () { if (eqDrag) { eqDrag = null; save(); drawEq(); } };
+    var end = function () { if (eqDrag) { eqDrag = null; save(); drawEq(); syncEqSliders(); } };
     cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
     cv.addEventListener('wheel', function (e) {
       var G = eqGeom(cv), r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
@@ -1213,10 +1239,51 @@
       if (!k) return;
       e.preventDefault();
       mic.eq[k].q = clamp(Math.round(mic.eq[k].q * (e.deltaY < 0 ? 1.12 : 0.89) * 10) / 10, 0.3, 6);
-      S.engine.update(mic); drawEq(); save();
+      S.engine.update(mic); drawEq(); save(); syncEqSliders();
     }, { passive: false });
     drawEq();
   }
+  // Nach dem Ziehen in der Kurve die einzelnen Band-Regler nachziehen
+  function syncEqSliders() {
+    var eq = S.settings.mic.eq;
+    [['eqLowF', eq.low.f, fineHz], ['eqLowG', eq.low.g, function (v) { return fmtDb(v, true); }], ['eqM1F', eq.mid1.f, fineHz], ['eqM1G', eq.mid1.g, function (v) { return fmtDb(v, true); }],
+     ['eqM1Q', eq.mid1.q, function (v) { return String(v).replace('.', ','); }], ['eqM2F', eq.mid2.f, fineHz], ['eqM2G', eq.mid2.g, function (v) { return fmtDb(v, true); }],
+     ['eqM2Q', eq.mid2.q, function (v) { return String(v).replace('.', ','); }], ['eqHiF', eq.high.f, fineHz], ['eqHiG', eq.high.g, function (v) { return fmtDb(v, true); }]].forEach(function (x) {
+      var r = $('#' + x[0]); if (!r) return;
+      r.value = x[1]; paintRange(r); var o = $('#' + x[0] + '-out'); if (o) o.textContent = x[2](x[1]);
+    });
+  }
+  // Aufgeklappte Bereiche bleiben beim Neuzeichnen offen
+  document.addEventListener('toggle', function (e) { var d = e.target; if (d && d.dataset && d.dataset.fine) { S.fineOpen = S.fineOpen || {}; S.fineOpen[d.dataset.fine] = d.open; } }, true);
+
+  // Genaue Werte eintippen: Klick auf die Zahl neben einem Regler
+  function editRangeValue(out) {
+    var r = out.parentNode.querySelector('input[type=range]'); if (!r || out.querySelector('input')) return;
+    var min = +r.min, max = +r.max, step = +r.step || 1, old = out.textContent;
+    var isPct = /%/.test(old) && max <= 1.5, isK = /kHz/.test(old);
+    var shown = isPct ? Math.round(+r.value * 100) : (isK ? +r.value / 1000 : +r.value);
+    out.innerHTML = '<input class="numedit mono" type="text" inputmode="decimal" value="' + String(shown).replace('.', ',') + '">';
+    var inp = out.firstChild, done = false;
+    inp.focus(); inp.select();
+    var commit = function (ok) {
+      if (done) return; done = true;
+      var n = parseFloat(String(inp.value).replace(',', '.').replace(/[^0-9.+-]/g, ''));
+      out.textContent = old;
+      if (!ok || isNaN(n)) return;
+      if (isPct) n = n / 100;
+      else if (isK || (r.dataset.range && /F$|Freq$/.test(r.dataset.range) && n < 20 && max > 1000)) n = n * 1000;
+      n = Math.min(max, Math.max(min, Math.round((n - min) / step) * step + min));
+      r.value = String(Math.round(n * 1000) / 1000);
+      r.dispatchEvent(new Event('input', { bubbles: true }));
+      r.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commit(true); } if (e.key === 'Escape') { e.stopPropagation(); commit(false); } });
+    inp.addEventListener('blur', function () { commit(true); });
+  }
+  document.addEventListener('click', function (e) {
+    var o = e.target.closest('label.slider > output');
+    if (o && !e.target.closest('.numedit')) { e.preventDefault(); editRangeValue(o); }
+  }, true);
   function drawEq() {
     var cv = $('#eqCanvas');
     if (!cv) return;
@@ -1369,6 +1436,11 @@
 
   // ------------------------------------------------------------------ Was ist neu (nach jedem Update einmal)
   var CHANGELOG = [
+    { v: '1.4.0', items: [
+      ['new', 'Mikrofon-Profile zum Wechseln, Teilen per Code und im Discord, Übernehmen mit einem Klick'],
+      ['new', 'Mehr Feineinstellungen im Profi-Modus: EQ-Bänder einzeln, Filter-Steilheit, Gate, Knee, Limiter'],
+      ['new', 'Jeden Wert genau eintippen: einfach auf die Zahl neben dem Regler klicken']
+    ] },
     { v: '1.3.0', items: [
       ['new', 'Neues Update-Fenster: Beim Start siehst du sofort, was neu ist, und entscheidest: jetzt, später oder beim nächsten Start'],
       ['new', 'Design wählen: 7 Farbstile in den Einstellungen, passend zum Fusion-X-Look'],
@@ -1449,6 +1521,174 @@
     if (u.state === 'ready' && was !== 'ready' && !$('.dialog.updpop')) { toast('Update auf Version ' + u.version + ' ist bereit. Es wird beim Beenden installiert.'); renderNav(); }
     updPopRefresh();
     maybeUpdatePopup();
+  }
+
+  // ------------------------------------------------------------------ Mikrofon-Profile & Teilen
+  var CAT_NAMES = [['allgemein', 'Allgemein'], ['gaming', 'Gaming'], ['streaming', 'Streaming'], ['podcast', 'Podcast'], ['musik', 'Musik']];
+  function micProfilesCard() {
+    var st = S.settings, list = st.micProfiles || [];
+    return '<section class="card" id="micProfiles"><div class="chead"><div><h2>' + ic('profiles') + 'Mikrofon-Profile</h2><p class="lead">Speichere deine Einstellungen, wechsle mit einem Klick und teile sie mit Freunden oder im Discord.</p></div></div>' +
+      (list.length ? '<div class="mprofs">' + list.map(function (p) {
+        var on = st.micProfile === p.id;
+        return '<div class="mprof' + (on ? ' on' : '') + '"><button class="mpmain" data-mprof="use" data-id="' + esc(p.id) + '" aria-pressed="' + on + '"><b>' + esc(p.name) + '</b><span>' + esc([p.author ? 'von ' + p.author : 'Eigenes Profil', p.mic].filter(Boolean).join(' · ')) + '</span></button>' +
+          '<button class="iconbtn sm" data-mprof="share" data-id="' + esc(p.id) + '" title="Teilen" aria-label="Teilen">' + ic('share', 'sm') + '</button>' +
+          '<button class="iconbtn sm" data-mprof="del" data-id="' + esc(p.id) + '" title="Löschen" aria-label="Löschen">' + ic('trash', 'sm') + '</button></div>';
+      }).join('') + '</div>' : '<p class="small muted">Noch keine eigenen Profile. Speichere deine aktuellen Einstellungen oder übernimm eins aus dem Discord.</p>') +
+      '<div class="row" style="margin-top:12px;flex-wrap:wrap">' +
+        '<button class="btn sm" data-mprof="save">' + ic('plus', 'sm') + 'Aktuelle speichern</button>' +
+        '<button class="btn sm primary" data-mprof="share">' + ic('share', 'sm') + 'Teilen</button>' +
+        '<button class="btn sm" data-mprof="paste">' + ic('download', 'sm') + 'Code einfügen</button>' +
+        ((S.community || {}).invite ? '<button class="btn sm ghost" data-mprof="browse">' + ic('ext', 'sm') + 'Settings im Discord</button>' : '') +
+      '</div></section>';
+  }
+  function trialBanner() {
+    var t = S.settings.micTrial; if (!t) return '';
+    return '<div class="notice trial">' + ic('sparkle') + '<div><b>Du probierst „' + esc(t.meta.name) + '“' + (t.meta.author ? ' von ' + esc(t.meta.author) : '') + ' aus</b>' +
+      'Lautstärke und Schwelle der Störgeräusch-Sperre sind deine eigenen. Mit dem Mikro-Check passt du sie in 10 Sekunden an dein Mikro an. Speicherst du nicht, ist nach dem Schließen von Fusion-X wieder alles wie vorher.' +
+      '<div class="act"><button class="btn sm primary" data-mprof="trialSave">' + ic('check', 'sm') + 'Als Profil speichern</button><button class="btn sm amber" data-act="micCheck">' + ic('wand', 'sm') + 'Mikro-Check</button><button class="btn sm ghost" data-mprof="trialUndo">Zurück zu vorher</button></div></div></div>';
+  }
+  function micProfById(id) { return (S.settings.micProfiles || []).filter(function (p) { return p.id === id; })[0]; }
+  function micDevName() { var d = devById(S.settings.mic.inputId); return d ? devTitle(d) : ''; }
+  function newProfile(meta, data, code) {
+    var p = { id: 'mp' + Date.now().toString(36), name: meta.name || 'Mein Profil', author: meta.author || '', mic: meta.mic || '', desc: meta.desc || '', cat: meta.cat || 'allgemein', data: data, code: code || '', at: Date.now() };
+    S.settings.micProfiles = (S.settings.micProfiles || []).concat([p]);
+    return p;
+  }
+  function useMicProfile(p) {
+    S.settings.mic = FXCODE.apply(S.settings.mic, p.data, true);
+    S.settings.micProfile = p.id; S.settings.micTrial = null;
+    micChanged(); renderPage(); renderStripsIfMixer();
+    toast('Mikrofon-Profil „' + p.name + '“ aktiv');
+  }
+  function micProfileAct(act, id) {
+    var st = S.settings, p = id && micProfById(id);
+    if (act === 'use' && p) return useMicProfile(p);
+    if (act === 'del' && p) {
+      var dlg = modal('<h2>Profil löschen?</h2><p class="lead">„' + esc(p.name) + '“ wird aus deinen Mikrofon-Profilen entfernt. Deine aktuellen Einstellungen bleiben, wie sie sind.</p>' +
+        '<div class="foot"><button class="btn ghost" data-close>Abbrechen</button><button class="btn danger" id="mpDel">' + ic('trash', 'sm') + 'Löschen</button></div>');
+      $('[data-close]', dlg).onclick = closeModal;
+      $('#mpDel', dlg).onclick = function () {
+        st.micProfiles = st.micProfiles.filter(function (x) { return x.id !== id; });
+        if (st.micProfile === id) st.micProfile = null;
+        save(); closeModal(); renderPage();
+      };
+      return;
+    }
+    if (act === 'save') return openSaveProfile();
+    if (act === 'share') return openShare(p || null);
+    if (act === 'paste') return openPasteCode();
+    if (act === 'browse') { if (fx.openExternal && S.community.invite) fx.openExternal(S.community.invite); return; }
+    if (act === 'trialSave' && st.micTrial) {
+      var t = st.micTrial, np = newProfile(t.meta, t.data, t.code);
+      st.micProfile = np.id; st.micTrial = null; save(); renderPage(); toast('Gespeichert als „' + np.name + '“'); return;
+    }
+    if (act === 'trialUndo' && st.micTrial) { st.mic = st.micTrial.backup; st.micTrial = null; micChanged(); renderPage(); toast('Deine vorherigen Einstellungen sind zurück.'); return; }
+  }
+  function sharedData() { var m = S.settings.mic; return JSON.parse(JSON.stringify({ hpf: m.hpf, denoise: m.denoise, gate: m.gate, eq: m.eq, comp: m.comp, deess: m.deess, limiter: m.limiter, outGainDb: m.outGainDb, gainDb: m.gainDb })); }
+  function field(id, label, max, val, ph) {
+    return '<label class="field" style="display:grid;gap:6px"><span class="eyebrow">' + esc(label) + '</span><input class="input" id="' + id + '" maxlength="' + max + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + ' value="' + esc(val || '') + '"></label>';
+  }
+  function openSaveProfile() {
+    var dlg = modal('<h2>Aktuelle Einstellungen speichern</h2><p class="lead">Als eigenes Mikrofon-Profil, zu dem du jederzeit mit einem Klick zurück kannst.</p>' +
+      '<div style="margin-top:12px">' + field('mpName', 'Name', 32, '', 'z. B. Stream-Stimme') + '</div>' +
+      '<div class="foot"><button class="btn ghost" data-close>Abbrechen</button><button class="btn primary" id="mpGo">' + ic('check', 'sm') + 'Speichern</button></div>');
+    $('[data-close]', dlg).onclick = closeModal;
+    var go = function () {
+      var name = $('#mpName', dlg).value.trim(); if (!name) { $('#mpName', dlg).focus(); return; }
+      var p = newProfile({ name: name, mic: micDevName() }, sharedData());
+      S.settings.micProfile = p.id; save(); closeModal(); renderPage(); toast('Gespeichert als „' + name + '“');
+    };
+    $('#mpGo', dlg).onclick = go;
+    $('#mpName', dlg).onkeydown = function (e) { if (e.key === 'Enter') go(); };
+    setTimeout(function () { $('#mpName', dlg).focus(); }, 50);
+  }
+  function miniSeg(name, opts, val) {
+    return '<div class="seg" role="group">' + opts.map(function (o) { return '<button type="button" data-mseg="' + name + '" data-val="' + o[0] + '" aria-pressed="' + (o[0] === val) + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>';
+  }
+  function openShare(p) {
+    var st = S.settings, pub = !!(S.community || {}).presets, cat = (p && p.cat) || 'allgemein';
+    var dlg = modal('<h2>Mikro-Einstellungen teilen</h2><p class="lead">Geteilt wird nur der Klang: Rauschunterdrückung, Filter, Klang, Kompressor, Sperre und Zischlaute. Keine Aufnahmen, keine Gerätedaten.</p>' +
+      '<div class="grid cols2" style="gap:10px;margin-top:12px">' +
+        field('shName', 'Name der Einstellung', 32, p ? p.name : '', 'z. B. Warme Stream-Stimme') +
+        field('shAuthor', 'Dein Name (freiwillig)', 24, st.shareAuthor, 'z. B. dein Discord-Name') +
+        field('shMic', 'Mikrofon', 40, p ? p.mic : micDevName(), 'z. B. HyperX QuadCast') +
+        field('shDesc', 'Kurze Beschreibung (freiwillig)', 80, p ? p.desc : '', 'z. B. Warm und klar, ohne Tastatur') +
+      '</div>' +
+      '<div style="margin-top:12px"><span class="eyebrow">Kategorie</span><div style="margin-top:6px">' + miniSeg('cat', CAT_NAMES, cat) + '</div></div>' +
+      '<div style="margin-top:12px"><span class="eyebrow">Wie teilen?</span><div style="margin-top:6px">' + miniSeg('how', pub ? [['code', 'Nur Code'], ['public', 'Öffentlich im Discord']] : [['code', 'Nur Code']], 'code') + '</div>' +
+        '<p class="small muted" id="shHowTxt" style="margin:8px 0 0">Du bekommst einen Code, den du selbst weitergibst. Niemand sonst sieht ihn.</p></div>' +
+      '<div id="shResult"></div>' +
+      '<div class="foot"><button class="btn ghost" data-close>Schließen</button><button class="btn primary" id="shGo">' + ic('share', 'sm') + '<span id="shGoTxt">Code erstellen</span></button></div>', 'share');
+    $('[data-close]', dlg).onclick = closeModal;
+    var how = 'code', catSel = cat;
+    dlg.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-mseg]'); if (!b) return;
+      if (b.dataset.mseg === 'cat') catSel = b.dataset.val;
+      if (b.dataset.mseg === 'how') {
+        how = b.dataset.val;
+        $('#shHowTxt', dlg).textContent = how === 'public' ? 'Erscheint als eigener Beitrag im Discord-Forum „Mikrofon-Settings“. Alle können ihn mit einem Klick übernehmen.' : 'Du bekommst einen Code, den du selbst weitergibst. Niemand sonst sieht ihn.';
+        $('#shGoTxt', dlg).textContent = how === 'public' ? 'Im Discord teilen' : 'Code erstellen';
+      }
+      Array.prototype.forEach.call(b.parentNode.querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', x === b); });
+    });
+    $('#shGo', dlg).onclick = async function () {
+      var name = $('#shName', dlg).value.trim();
+      if (!name) { $('#shName', dlg).focus(); toast('Gib der Einstellung einen Namen.', true); return; }
+      var meta = { name: name, author: $('#shAuthor', dlg).value.trim(), mic: $('#shMic', dlg).value.trim(), desc: $('#shDesc', dlg).value.trim(), cat: catSel };
+      st.shareAuthor = meta.author; save();
+      var go = $('#shGo', dlg); go.disabled = true;
+      try {
+        var data = p ? p.data : sharedData();
+        var code = await FXCODE.encode(meta, data);
+        var out = '<div class="sharecode"><span class="eyebrow">Dein Code</span><textarea class="input mono" id="shCode" readonly rows="3">' + esc(code) + '</textarea><div class="row"><button class="btn sm" id="shCopy">' + ic('copy', 'sm') + 'Code kopieren</button></div></div>';
+        var r = null;
+        if (how === 'public') {
+          r = await fx.sharePreset({ name: meta.name, author: meta.author, mic: meta.mic, desc: meta.desc, cat: meta.cat, code: code, summary: FXCODE.summary(FXCODE.apply(S.settings.mic, data, false)) });
+          if (!r || !r.ok) throw new Error((r && r.error) || 'Teilen hat nicht geklappt.');
+          out = '<div class="notice ok" style="margin-top:12px">' + ic('check') + '<div><b>Im Discord geteilt!</b>Dein Beitrag ist jetzt im Forum „Mikrofon-Settings“.' + (r.url ? '<div class="act"><button class="btn sm" id="shOpen">' + ic('ext', 'sm') + 'Beitrag öffnen</button></div>' : '') + '</div></div>' + out;
+        }
+        $('#shResult', dlg).innerHTML = out;
+        $('#shCopy', dlg).onclick = function () { copyText(code, 'Code kopiert'); };
+        if (r && r.url && $('#shOpen', dlg)) $('#shOpen', dlg).onclick = function () { fx.openExternal(r.url); };
+        go.disabled = false;
+      } catch (err) { go.disabled = false; toast(err.message, true); }
+    };
+    setTimeout(function () { $('#shName', dlg).focus(); }, 50);
+  }
+  function copyText(text, msg) {
+    var p = fx.copyText ? fx.copyText(text) : navigator.clipboard.writeText(text);
+    Promise.resolve(p).then(function () { toast(msg || 'Kopiert'); }).catch(function () { toast('Kopieren hat nicht geklappt.', true); });
+  }
+  function openPasteCode() {
+    var dlg = modal('<h2>Code einfügen</h2><p class="lead">Füge einen Fusion-X-Code ein, den du bekommen oder im Discord gefunden hast. Ein Link mit Code funktioniert auch.</p>' +
+      '<textarea class="input mono" id="pcCode" rows="4" style="margin-top:12px;width:100%" placeholder="FX1-…"></textarea><p class="small" id="pcErr" style="min-height:20px;margin:6px 0 0;color:var(--bad)"></p>' +
+      '<div class="foot"><button class="btn ghost" data-close>Abbrechen</button><button class="btn primary" id="pcGo">Weiter</button></div>');
+    $('[data-close]', dlg).onclick = closeModal;
+    $('#pcGo', dlg).onclick = function () {
+      FXCODE.decode($('#pcCode', dlg).value).then(openImport).catch(function (e) { $('#pcErr', dlg).textContent = e.message; });
+    };
+    setTimeout(function () { $('#pcCode', dlg).focus(); }, 50);
+  }
+  function openImport(r) {
+    var m = r.meta;
+    var dlg = modal('<div class="wnhead"><span class="importorb">' + ic('mic', 'lg') + '</span><div><span class="badge amber">Mikro-Einstellung</span><h2 style="margin-top:6px">' + esc(m.name) + '</h2>' +
+        '<p class="lead">' + esc([m.author ? 'von ' + m.author : '', m.mic].filter(Boolean).join(' · ') || 'Geteilte Einstellung') + '</p></div></div>' +
+      (m.desc ? '<p style="margin:10px 0 0">' + esc(m.desc) + '</p>' : '') +
+      '<div class="psum">' + FXCODE.summary(r.data).map(function (x) { return '<div><span>' + esc(x[0]) + '</span><b>' + esc(x[1]) + '</b></div>'; }).join('') + '</div>' +
+      '<p class="small muted" style="margin:10px 0 0">Deine Lautstärke und die Schwelle der Störgeräusch-Sperre bleiben, weil sie von deinem Mikro abhängen. Der Übersteuerungsschutz bleibt an.</p>' +
+      '<div class="foot"><button class="btn ghost" data-close>Abbrechen</button><span style="flex:1"></span><button class="btn" id="imSave">' + ic('plus', 'sm') + 'Direkt speichern</button><button class="btn primary" id="imTry">' + ic('play', 'sm') + 'Ausprobieren</button></div>', 'import');
+    $('[data-close]', dlg).onclick = closeModal;
+    $('#imSave', dlg).onclick = function () { var p = newProfile(m, r.data, r.code); save(); closeModal(); useMicProfile(p); };
+    $('#imTry', dlg).onclick = function () {
+      var st = S.settings;
+      st.micTrial = { meta: m, data: r.data, code: r.code, backup: st.micTrial ? st.micTrial.backup : clone(st.mic) };
+      st.mic = FXCODE.apply(st.mic, r.data, true); st.micProfile = null;
+      micChanged(); closeModal(); go('mic'); toast('Du hörst dich jetzt mit „' + m.name + '“.');
+    };
+  }
+  function onLink(link) {
+    if (!link || link.type !== 'preset') return;
+    FXCODE.decode(link.code).then(function (r) { if ($('#modal').innerHTML) closeModal(); openImport(r); }).catch(function (e) { toast(e.message, true); });
   }
 
   // ------------------------------------------------------------------ Update-Fenster beim Start
@@ -1991,7 +2231,7 @@
     var pq = e.target.closest('[data-peq]');
     if (pq) { peqSetPreset(pq.dataset.peq); toast('Equalizer: ' + PEQ_PRESETS[pq.dataset.peq].name); return; }
     var pr = e.target.closest('[data-preset]');
-    if (pr) { S.settings.mic = E.applyPreset(S.settings.mic, pr.dataset.preset); micChanged(); renderPage(); renderStripsIfMixer(); toast('Vorlage „' + E.PRESETS[pr.dataset.preset].name + '“ aktiv'); return; }
+    if (pr) { S.settings.micProfile = null; S.settings.mic = E.applyPreset(S.settings.mic, pr.dataset.preset); micChanged(); renderPage(); renderStripsIfMixer(); toast('Vorlage „' + E.PRESETS[pr.dataset.preset].name + '“ aktiv'); return; }
     var sb = e.target.closest('[data-setbool]');
     if (sb) { var k = sb.dataset.setbool; S.settings[k] = !S.settings[k]; save(); fx.saveSettings((function () { var o = {}; o[k] = S.settings[k]; return o; })()); if (k === 'proMode') { renderTop(); } renderPage(); return; }
     var sd = e.target.closest('[data-setduck]');
@@ -2000,6 +2240,8 @@
     if (dc) { var c = dc.dataset.duckcat; S.settings.ducking.cats[c] = !S.settings.ducking.cats[c]; dc.setAttribute('aria-pressed', S.settings.ducking.cats[c]); save(); return; }
     var hk = e.target.closest('[data-hotkey]');
     if (hk) { recordHotkey(hk); return; }
+    var mp = e.target.closest('[data-mprof]');
+    if (mp) { micProfileAct(mp.dataset.mprof, mp.dataset.id); return; }
     var th = e.target.closest('[data-theme-pick]');
     if (th) { pickTheme(th.dataset.themePick); return; }
     var a = e.target.closest('[data-act]');
@@ -2016,6 +2258,7 @@
     if (name === 'lang') { S.settings.lang = val; save(); fx.saveSettings({ lang: val }); applyLang(); renderTop(); renderPage(); return; }
     if (name === 'osdPos') { S.settings.osd.position = val; save(); renderPage(); if (fx.osd) fx.osd({ icon: 'mic', tone: 'voice', title: 'So sieht die Anzeige aus', sub: val === 'top' ? 'Oben am Bildschirm' : 'Unten am Bildschirm', position: val }); return; }
     if (name === 'denoise') { mic.denoise = val; mic.preset = null; micChanged(); renderPage(); return; }
+    if (name === 'hpfSlope') { mic.hpf.slope = +val; micChanged(); renderPage(); return; }
   }
 
   function toggleFx(path, el) {
@@ -2113,7 +2356,22 @@
     switch (t.dataset.range) {
       case 'gainDb': mic.gainDb = v; txt = fmtDb(v, true); break;
       case 'outGainDb': mic.outGainDb = v; txt = fmtDb(v, true); break;
-      case 'gateSens': mic.gate.open = Math.round(-70 + v / 100 * 40); mic.gate.close = mic.gate.open - 6; txt = fmtDb(mic.gate.open); break;
+      case 'gateOpen': { var hy = Math.max(1, mic.gate.open - mic.gate.close); mic.gate.open = v; mic.gate.close = v - hy; txt = fmtDb(v); break; }
+      case 'gateHyst': mic.gate.close = mic.gate.open - v; txt = '−' + v + ' dB unter Schwelle'; break;
+      case 'gateAttack': mic.gate.attackMs = v; txt = String(v).replace('.', ',') + ' ms'; break;
+      case 'eqLowF': mic.eq.low.f = v; mic.preset = null; txt = fineHz(v); drawEq(); break;
+      case 'eqLowG': mic.eq.low.g = v; mic.preset = null; txt = fmtDb(v, true); drawEq(); break;
+      case 'eqM1F': mic.eq.mid1.f = v; mic.preset = null; txt = fineHz(v); drawEq(); break;
+      case 'eqM1G': mic.eq.mid1.g = v; mic.preset = null; txt = fmtDb(v, true); drawEq(); break;
+      case 'eqM1Q': mic.eq.mid1.q = v; mic.preset = null; txt = String(v).replace('.', ','); drawEq(); break;
+      case 'eqM2F': mic.eq.mid2.f = v; mic.preset = null; txt = fineHz(v); drawEq(); break;
+      case 'eqM2G': mic.eq.mid2.g = v; mic.preset = null; txt = fmtDb(v, true); drawEq(); break;
+      case 'eqM2Q': mic.eq.mid2.q = v; mic.preset = null; txt = String(v).replace('.', ','); drawEq(); break;
+      case 'eqHiF': mic.eq.high.f = v; mic.preset = null; txt = fineHz(v); drawEq(); break;
+      case 'eqHiG': mic.eq.high.g = v; mic.preset = null; txt = fmtDb(v, true); drawEq(); break;
+      case 'compKnee': mic.comp.knee = v; txt = v + ' dB'; break;
+      case 'limCeil': mic.limiter.ceiling = v; txt = fmtDb(v); break;
+      case 'limRel': mic.limiter.release = v; txt = v + ' ms'; break;
       case 'gateRelease': mic.gate.releaseMs = v; txt = v + ' ms'; break;
       case 'gateHold': mic.gate.holdMs = v; txt = v + ' ms'; break;
       case 'gateFloor': mic.gate.floorDb = v; txt = fmtDb(v); break;
@@ -3052,6 +3310,8 @@
     S.settings = deepMerge(DEFAULTS, init.settings || {});
     applyLang();
     initTheme();
+    // App wurde beim Ausprobieren geschlossen: wieder die vorherigen Einstellungen
+    if (S.settings.micTrial && S.settings.micTrial.backup) { S.settings.mic = S.settings.micTrial.backup; S.settings.micTrial = null; save(); }
     // Engine bekommt immer die sparsame Fassung, wenn die bearbeitete Stimme gerade niemand hört
     (function () {
       var eng = S.engine, up = eng.update.bind(eng), st = eng.start.bind(eng);
@@ -3082,7 +3342,10 @@
     pttWatch();
     fx.onTray(runAction);
     if (fx.onObs) fx.onObs(smOnObs);
-    if (fx.update) { fx.update('status').then(onUpdate).catch(function () {}); if (fx.onUpdate) fx.onUpdate(onUpdate); }
+    if (fx.update) { fx.update('status').then(onUpdate).catch(function () {});
+    if (fx.onUpdate) fx.onUpdate(onUpdate); }
+    if (fx.onLink) fx.onLink(onLink);
+    if (init.link) setTimeout(function () { onLink(init.link); }, 1200);
     peqRefresh().then(function (st) { if (st && st.installed && (S.settings.eq.enabled || st.included)) peqApply(true); });
     if (smOn()) smConnect();
     if (fx.onRemote) fx.onRemote(runAction);

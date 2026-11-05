@@ -147,6 +147,9 @@ const catCom = await channel({ name: 'Community', type: 4 });
 const general = await channel({ name: '💬┃allgemein', type: 0, parent: catCom.id, topic: 'Alles rund um Sound, Streaming und Gaming. Bitte freundlich bleiben.' });
 const setups = await channel({ name: '🖥️┃setups', type: 0, parent: catCom.id, topic: 'Zeig dein Setup: Mikrofon, Interface, Headset, Stream Deck. Bilder ausdrücklich erwünscht.' });
 const clips = await channel({ name: '🎬┃clips-und-sounds', type: 0, parent: catCom.id, topic: 'Clips, Soundboard-Sounds und eigene Klang-Einstellungen teilen.' });
+const presets = await channel({ name: '🎚️┃mikrofon-settings', type: FORUM, parent: catCom.id, slowmode: 120,
+  topic: 'Mikrofon-Einstellungen der Community. Teilen geht direkt in Fusion-X: Mikrofon → Mikrofon-Profile → Teilen. Mit „In Fusion-X übernehmen“ probierst du jede Einstellung mit einem Klick aus.',
+  tags: FORUM ? [{ name: 'Allgemein', emoji_name: '🎙️' }, { name: 'Gaming', emoji_name: '🎮' }, { name: 'Streaming', emoji_name: '📡' }, { name: 'Podcast', emoji_name: '🎧' }, { name: 'Musik', emoji_name: '🎵' }, { name: 'Empfohlen', emoji_name: '⭐', moderated: true }] : undefined });
 await channel({ name: '🔊 Lounge', type: 2, parent: catCom.id });
 await channel({ name: '🎮 Gaming', type: 2, parent: catCom.id });
 await channel({ name: '🎙️ Mikro-Test', type: 2, parent: catCom.id });
@@ -184,7 +187,7 @@ await post(welcome, 'Fusion-X Audio · Kostenlos für Windows 10 und 11', { embe
   description: 'Fusion-X Audio ist die kostenlose Sound-Zentrale für Windows. Jede App bekommt ihren eigenen Regler, deine Stimme klingt mit KI-Rauschunterdrückung klar wie im Studio, dein Stream bekommt einen eigenen Mix und ein Equalizer verbessert alles, was du hörst.\n\nHier bekommst du Hilfe, meldest Fehler direkt an den Entwickler und erfährst als Erstes, was neu ist.',
   fields: [
     { name: 'Erste Schritte', value: '`1` App herunterladen und installieren\n`2` Den Einrichtungs-Assistenten durchlaufen, das dauert etwa eine Minute\n`3` Fragen? Einfach einen Beitrag in ' + ch(help) + ' erstellen' },
-    { name: 'Wichtige Kanäle', value: ch(rules) + '  Bitte einmal lesen\n' + ch(faq) + '  Antworten auf häufige Fragen\n' + ch(changelog) + '  Was ist neu\n' + ch(bugs) + '  Fehler melden\n' + ch(ideas) + '  Ideen einreichen', inline: true },
+    { name: 'Wichtige Kanäle', value: ch(rules) + '  Bitte einmal lesen\n' + ch(faq) + '  Antworten auf häufige Fragen\n' + ch(changelog) + '  Was ist neu\n' + ch(bugs) + '  Fehler melden\n' + ch(ideas) + '  Ideen einreichen\n' + ch(presets) + '  Mikro-Settings teilen', inline: true },
     { name: 'Rollen', value: '<@&' + R.dev.id + '>  Entwicklung\n<@&' + R.mod.id + '>  Moderation\n<@&' + R.tester.id + '>  Testet Vorab-Versionen\n<@&' + R.ping.id + '>  Wird bei Updates benachrichtigt', inline: true },
     { name: 'Fehler direkt aus der App melden', value: 'In Fusion-X unter **Einstellungen → Problem melden**. Deine Meldung landet automatisch in ' + ch(bugs) + ', inklusive der technischen Infos, die für die Fehlersuche gebraucht werden.' }
   ],
@@ -219,6 +222,7 @@ await post(faq, 'Fusion-X Audio · Häufige Fragen', { embeds: [bannerEmbed('faq
     { name: 'Wie richte ich den Stream-Mix ein?', value: 'In OBS (ab Version 28) unter **Werkzeuge → WebSocket-Servereinstellungen** den Server aktivieren und das Passwort in Fusion-X einfügen.' },
     { name: 'Wie bekomme ich den Equalizer?', value: 'Auf der Seite **Equalizer** Equalizer APO herunterladen, beim Installieren Kopfhörer und Lautsprecher anhaken und den PC neu starten.' },
     { name: 'Wie bekomme ich Updates?', value: 'Automatisch. Fusion-X lädt neue Versionen im Hintergrund und installiert sie beim Beenden. Mit der Rolle <@&' + R.ping.id + '> wirst du hier zusätzlich benachrichtigt.' },
+    { name: 'Wie teile oder übernehme ich Mikro-Einstellungen?', value: 'In Fusion-X auf **Mikrofon → Mikrofon-Profile → Teilen**. Als Code für Freunde oder öffentlich in ' + ch(presets) + '. Dort übernimmst du jede Einstellung mit **In Fusion-X übernehmen** oder fügst den Code in der App ein.' },
     { name: 'Meine Frage ist nicht dabei.', value: 'Erstelle einfach einen Beitrag in ' + ch(help) + '. Die Community und das Team helfen dir weiter.' }
   ],
   footer: { text: 'Fusion-X Audio · Häufige Fragen', icon_url: ICON }
@@ -274,6 +278,17 @@ await pinnedGuide(help, '📌 Bevor du fragst', {
   ],
   footer: { text: 'Fusion-X Audio · Hilfe', icon_url: ICON }
 });
+await pinnedGuide(presets, '📌 So teilst und übernimmst du Settings', {
+  color: TEAL, author: AUTHOR, title: 'Mikrofon-Settings teilen und übernehmen',
+  description: 'Hier landen die Mikrofon-Einstellungen der Community. Jede kannst du mit einem Klick ausprobieren.',
+  fields: [
+    { name: 'Übernehmen', value: '**In Fusion-X übernehmen** klicken, im Browser „Fusion-X öffnen“ bestätigen und ausprobieren. Gefällt es dir, speicherst du es als eigenes Mikrofon-Profil. Wenn nicht, ist mit einem Klick alles wie vorher.\nAlternativ den Code kopieren und in Fusion-X unter **Mikrofon → Mikrofon-Profile → Code einfügen** einfügen.' },
+    { name: 'Teilen', value: 'In Fusion-X auf **Mikrofon → Mikrofon-Profile → Teilen**, Name und Mikrofon eintragen, **Öffentlich im Discord** wählen. Der Beitrag erscheint dann automatisch hier.' },
+    { name: 'Gut zu wissen', value: 'Lautstärke und Schwelle der Störgeräusch-Sperre hängen von deinem eigenen Mikro ab und werden nicht übernommen. Nach dem Übernehmen passt der **Mikro-Check** sie in 10 Sekunden an. Der Übersteuerungsschutz bleibt immer an.' },
+    { name: 'Bewerten', value: 'Gefällt dir eine Einstellung, gib ihr ein 👍. Besonders gute markiert das Team als ⭐ **Empfohlen**.' }
+  ],
+  footer: { text: 'Fusion-X Audio · Mikrofon-Settings', icon_url: ICON }
+});
 await pinnedGuide(ideas, '📌 So funktionieren Wünsche', {
   color: TEAL, author: AUTHOR, title: 'So funktionieren Wünsche',
   description: 'Hier entscheidest du mit, wie es mit Fusion-X weitergeht.',
@@ -290,6 +305,11 @@ summary('- Angepinnte Anleitungen in Bug-Reports, Hilfe und Feature-Wünsche');
 const hooks = await api('GET', '/channels/' + bugs.id + '/webhooks');
 let hook = hooks.find((h) => h.name === 'Fusion-X Meldungen');
 if (!hook) hook = await api('POST', '/channels/' + bugs.id + '/webhooks', { name: 'Fusion-X Meldungen', avatar: iconData });
+if (presets.type === 15) {
+  const ph = await api('GET', '/channels/' + presets.id + '/webhooks');
+  if (!ph.find((h) => h.name === 'Fusion-X Mikro-Settings')) await api('POST', '/channels/' + presets.id + '/webhooks', { name: 'Fusion-X Mikro-Settings', avatar: iconData });
+  summary('- Forum „Mikrofon-Settings“ mit Webhook bereit');
+}
 summary('- Webhook „Fusion-X Meldungen“ bereit (wird beim nächsten App-Build eingebaut)');
 
 // ================================================================ Einladung
@@ -327,7 +347,7 @@ if (community) {
     const prompt = (title, single, mk) => { curPrompt = oldPrompt(title); const p = { id: curPrompt ? curPrompt.id : snow(), type: 0, title, single_select: single, required: false, in_onboarding: true, options: mk() }; return p; };
     await api('PUT', '/guilds/' + GUILD + '/onboarding', {
       enabled: true, mode: 0,
-      default_channel_ids: [welcome.id, rules.id, faq.id, announcements.id, changelog.id, bugs.id, help.id, ideas.id, general.id, setups.id, clips.id],
+      default_channel_ids: [welcome.id, rules.id, faq.id, announcements.id, changelog.id, bugs.id, help.id, ideas.id, general.id, setups.id, clips.id, presets.id],
       prompts: [
         prompt('Wofür nutzt du Fusion-X?', false, () => [
           opt('Streaming', 'Ich streame auf Twitch, YouTube oder TikTok', [R.streamer.id], '📡'),
