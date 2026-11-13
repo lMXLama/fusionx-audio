@@ -1,4 +1,14 @@
 {
+  "1.4.1": {
+    "de": [
+      "Update-Fenster erscheint auch beim Öffnen aus dem Infobereich",
+      "Mit Windows starten öffnet das Fenster und zeigt, wann es zuletzt geklappt hat"
+    ],
+    "en": [
+      "Update window also appears when opening from the system tray",
+      "Start with Windows opens the window and shows when it last worked"
+    ]
+  },
   "1.4.0": {
     "de": [
       "Mikrofon-Profile: speichern, wechseln und per Code oder im Discord teilen",

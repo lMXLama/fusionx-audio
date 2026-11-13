@@ -1,6 +1,4 @@
-- Mikrofon-Profile zum Wechseln, Teilen per Code und im Discord, Übernehmen mit einem Klick
-- Mehr Feineinstellungen im Profi-Modus: EQ-Bänder einzeln, Filter-Steilheit, Gate, Knee, Limiter
-- Jeden Wert genau eintippen: einfach auf die Zahl neben dem Regler klicken
-- EN: Mic profiles to switch between, share by code or on Discord, apply with one click
-- EN: More fine-tuning in Pro mode: individual EQ bands, filter slope, gate, knee, limiter
-- EN: Type any value exactly: just click the number next to the fader
+- Update-Fenster erscheint jetzt auch, wenn du Fusion-X aus dem Infobereich öffnest
+- Mit Windows starten öffnet jetzt das Fenster, in den Einstellungen siehst du, wann es zuletzt geklappt hat
+- EN: The update window now also appears when you open Fusion-X from the system tray
+- EN: Start with Windows now opens the window, and Settings show when it last worked

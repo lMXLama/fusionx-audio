@@ -1436,6 +1436,10 @@
 
   // ------------------------------------------------------------------ Was ist neu (nach jedem Update einmal)
   var CHANGELOG = [
+    { v: '1.4.1', items: [
+      ['fix', 'Update-Fenster erscheint jetzt auch, wenn du Fusion-X aus dem Infobereich öffnest'],
+      ['fix', 'Mit Windows starten öffnet jetzt das Fenster, in den Einstellungen siehst du, wann es zuletzt geklappt hat']
+    ] },
     { v: '1.4.0', items: [
       ['new', 'Mikrofon-Profile zum Wechseln, Teilen per Code und im Discord, Übernehmen mit einem Klick'],
       ['new', 'Mehr Feineinstellungen im Profi-Modus: EQ-Bänder einzeln, Filter-Steilheit, Gate, Knee, Limiter'],
@@ -1521,6 +1525,17 @@
     if (u.state === 'ready' && was !== 'ready' && !$('.dialog.updpop')) { toast('Update auf Version ' + u.version + ' ist bereit. Es wird beim Beenden installiert.'); renderNav(); }
     updPopRefresh();
     maybeUpdatePopup();
+  }
+
+  // Zeigt, ob der Windows-Autostart wirklich funktioniert
+  function autostartState() {
+    var a = S.autostartInfo || {};
+    if (!S.autostart) return '';
+    if (a.registered && a.allowed === false) return '<p class="small" style="margin:-4px 0 10px;color:var(--warn)">' + ic('warn', 'sm') + ' Im Task-Manager unter „Autostart-Apps“ ist Fusion-X deaktiviert. Dort auf „Aktivieren“ klicken.</p>';
+    if (!a.last) return '<p class="small muted" style="margin:-4px 0 10px">Ob es klappt, siehst du nach dem nächsten Windows-Start hier.</p>';
+    var d = new Date(a.last), today = new Date().toDateString() === d.toDateString();
+    var when = (today ? 'heute' : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })) + ' um ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    return '<p class="small" style="margin:-4px 0 10px;color:var(--ok)">' + ic('check', 'sm') + ' Zuletzt mit Windows gestartet: ' + when + '</p>';
   }
 
   // ------------------------------------------------------------------ Mikrofon-Profile & Teilen
@@ -1693,7 +1708,18 @@
 
   // ------------------------------------------------------------------ Update-Fenster beim Start
   // Erscheint bei jedem Start, solange eine neuere Version da ist. „Überspringen“ gilt bis zum nächsten Start.
-  var UPD = { skipped: false, remindAt: 0, timer: null, busy: false };
+  var UPD = { skipped: false, remindAt: 0, timer: null, busy: false, lastCheck: Date.now() };
+  // Fenster wurde (wieder) geöffnet, z. B. aus dem Infobereich: „Überspringen“ gilt nicht mehr,
+  // und wenn die letzte Prüfung länger her ist, wird neu nach Updates gesucht.
+  function updOnOpen() {
+    UPD.skipped = false;
+    var st = (S.update || {}).state;
+    if (fx.update && Date.now() - UPD.lastCheck > 10 * 60e3 && st !== 'downloading' && st !== 'ready' && st !== 'checking') {
+      UPD.lastCheck = Date.now();
+      fx.update('check').then(onUpdate).catch(function () {});
+    }
+    setTimeout(maybeUpdatePopup, 600);
+  }
   function updNewer() { var u = S.update || {}; return u.version && vNum(u.version) > vNum(S.version) && /^(available|downloading|ready)$/.test(u.state); }
   function maybeUpdatePopup() {
     if (S.demo && !S.demoUpdate) return;
@@ -1720,7 +1746,7 @@
         '<button class="btn sm" data-upl="60">' + ic('clock', 'sm') + 'In 1 Stunde erinnern</button>' +
         '<button class="btn sm" data-upl="180">' + ic('clock', 'sm') + 'In 3 Stunden erinnern</button></div></div>' +
       '<div class="foot"><button class="btn ghost" id="updSkip">Überspringen</button><span style="flex:1"></span><button class="btn" id="updLaterBtn">' + ic('clock', 'sm') + 'Später</button><button class="btn primary" id="updNow">' + ic('refresh', 'sm') + 'Jetzt aktualisieren</button></div>', 'whatsnew updpop');
-    $('#updSkip', dlg).onclick = function () { UPD.skipped = true; closeModal(); toast('Erinnerung beim nächsten Start von Fusion-X.'); };
+    $('#updSkip', dlg).onclick = function () { UPD.skipped = true; closeModal(); toast('Erinnerung beim nächsten Öffnen von Fusion-X.'); };
     $('#updLaterBtn', dlg).onclick = function () { var l = $('#updLater', dlg); l.hidden = !l.hidden; };
     $('#updNow', dlg).onclick = function () { UPD.busy = true; fx.update('now').then(onUpdate).catch(function () {}); updPopRefresh(); };
     Array.prototype.forEach.call(dlg.querySelectorAll('[data-upl]'), function (b) {
@@ -1904,8 +1930,9 @@
     v.innerHTML =
       '<div class="grid cols2">' +
       '<section class="card"><h2>' + ic('settings') + 'Allgemein</h2><div style="margin-top:6px">' +
-        srow('Mit Windows starten', 'Fusion-X startet unsichtbar im Infobereich, damit deine Stimme sofort bearbeitet wird.', sw(S.autostart, 'id="setAutostart"')) +
-        srow('Minimiert starten', 'Beim Öffnen direkt im Infobereich bleiben.', sw(st.startMinimized, 'data-setbool="startMinimized"')) +
+        srow('Mit Windows starten', 'Fusion-X öffnet sich, sobald du dich bei Windows anmeldest, und bearbeitet deine Stimme sofort.', sw(S.autostart, 'id="setAutostart"')) +
+        '<div id="autostartState">' + autostartState() + '</div>' +
+        srow('Minimiert starten', 'Direkt im Infobereich unten rechts starten, auch beim Windows-Start. Eine kurze Meldung zeigt, dass Fusion-X läuft.', sw(st.startMinimized, 'data-setbool="startMinimized"')) +
         srow('Schließen = in den Infobereich', 'Das X versteckt das Fenster nur. Beenden über das Symbol unten rechts.', sw(st.closeToTray, 'data-setbool="closeToTray"')) +
         srow('Profi-Modus', 'Zeigt EQ-Kurve, Kompressor-Details, Latenz und alle Feineinstellungen.', sw(st.proMode, 'data-setbool="proMode"')) +
         srow('Durchsichtiges Fenster', 'Glas-Effekt mit Blick auf den Desktop (Windows 11). Wirkt nach einem Neustart von Fusion-X.', sw(st.windowGlass !== false, 'id="setGlass"')) +
@@ -2410,7 +2437,12 @@
     var t = e.target;
     if (t.id === 'setAutostart') {
       var want = t.getAttribute('aria-checked') !== 'true';
-      fx.setAutostart(want).then(function (on) { S.autostart = on; t.setAttribute('aria-checked', !!on); });
+      fx.setAutostart(want).then(function (on) {
+        S.autostart = on; t.setAttribute('aria-checked', !!on);
+        S.autostartInfo = Object.assign({}, S.autostartInfo, { registered: !!on, allowed: true });
+        var box = $('#autostartState'); if (box) box.innerHTML = autostartState();
+        if (want && !on) toast('Windows hat den Autostart nicht übernommen. Schau im Task-Manager unter „Autostart-Apps“ nach Fusion-X.', true);
+      });
     }
     if (t.id === 'micEnabled') {
       S.settings.micEnabled = !S.settings.micEnabled; save();
@@ -2942,6 +2974,7 @@
       'Mikrofon: ' + S.engine.state + (S.engine.error ? ' – ' + S.engine.error : '') + ' · Effekte ' + (S.settings.micEnabled ? 'an' : 'aus') + ' · virtuelles Mikro ' + (S.settings.virtualMicActive ? 'aktiv' : 'aus'),
       'Geräte: ' + S.devices.map(function (x) { return (x.flow === 'render' ? 'A ' : 'E ') + x.name + ' [' + x.cls.kind + (x.isDefault ? ', Standard' : '') + ']'; }).join(' | '),
       'Apps: ' + Array.from(S.groups.values()).map(function (g) { return g.name + ' ' + Math.round(g.userVol * 100) + '%'; }).join(', '),
+      'Autostart: ' + (S.autostart ? 'an' : 'aus') + (S.autostartInfo ? ' · eingetragen ' + (S.autostartInfo.registered ? 'ja' : 'nein') + ' · erlaubt ' + (S.autostartInfo.allowed === false ? 'nein' : 'ja') + ' · zuletzt ' + (S.autostartInfo.last ? new Date(S.autostartInfo.last).toLocaleString('de-DE') : 'nie') + (S.autostartInfo.autostarted ? ' · diese Sitzung per Autostart' : '') : ''),
       'Stream Deck: ' + (d.remote ? d.remote.clients + ' verbunden' + (d.remote.error ? ' – ' + d.remote.error : '') : '-'),
       '', 'Ereignisse:', S.log.join('\n'), '', 'Helfer-Log:', (d.log || []).join('\n')
     ];
@@ -3306,7 +3339,7 @@
   // ------------------------------------------------------------------ Start
   async function boot() {
     var init = await fx.init();
-    S.platform = init.platform; S.version = init.version; S.community = init.community || {}; S.backend = init.backend || { ok: false }; S.autostart = init.autostart;
+    S.platform = init.platform; S.version = init.version; S.community = init.community || {}; S.backend = init.backend || { ok: false }; S.autostart = init.autostart; S.autostartInfo = init.autostartInfo || {};
     S.settings = deepMerge(DEFAULTS, init.settings || {});
     applyLang();
     initTheme();
@@ -3367,7 +3400,13 @@
     setInterval(applyEffectiveMic, 1500);
     S.hidden = init.visible === false;
     document.body.classList.toggle('hiddenwin', S.hidden);
-    if (fx.onVisible) fx.onVisible(function (v) { S.hidden = !v; document.body.classList.toggle('hiddenwin', S.hidden); if (v) { renderTop(); renderPage(); } applyEffectiveMic(); });
+    if (fx.onVisible) fx.onVisible(function (v) {
+      var wasHidden = S.hidden;
+      S.hidden = !v; document.body.classList.toggle('hiddenwin', S.hidden);
+      if (v) { renderTop(); renderPage(); }
+      applyEffectiveMic();
+      if (v && wasHidden) updOnOpen();
+    });
     log('Fusion-X gestartet' + (S.backend.ok ? '' : ' (Windows-Audio nicht verbunden)'));
 
     if (S.settings.micEnabled && !S.demo) {

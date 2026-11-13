@@ -15,6 +15,8 @@
   var P = [
     [/^Neu in Version (.+)$/, function (m) { return 'What’s new in version ' + m[1]; }],
     [/^Design „(.+)“ aktiv$/, function (m, t) { return 'Theme “' + t(m[1]) + '” active'; }],
+    [/^Zuletzt mit Windows gestartet: heute um (.+)$/, function (m) { return 'Last started with Windows: today at ' + m[1]; }],
+    [/^Zuletzt mit Windows gestartet: (.+) um (.+)$/, function (m) { return 'Last started with Windows: ' + m[1] + ' at ' + m[2]; }],
     [/^Mikrofon-Profil „(.+)“ aktiv$/, function (m) { return 'Mic profile “' + m[1] + '” active'; }],
     [/^Gespeichert als „(.+)“$/, function (m) { return 'Saved as “' + m[1] + '”'; }],
     [/^Du hörst dich jetzt mit „(.+)“\.$/, function (m) { return 'You now hear yourself with “' + m[1] + '”.'; }],

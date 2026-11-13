@@ -1,7 +1,7 @@
 // Fusion-X Audio – Hauptprozess
 // Fenster, Tray-Symbol, Tastenkürzel, Autostart, Einstellungen und die Brücke zum Windows-Audio.
 
-const { app, BrowserWindow, Tray, Menu, ipcMain, globalShortcut, nativeImage, protocol, net, shell, session, dialog, clipboard } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, globalShortcut, nativeImage, protocol, net, shell, session, dialog, clipboard, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
@@ -108,10 +108,17 @@ const helperLog = [];
 const logLine = (m) => { helperLog.push(new Date().toISOString().slice(11, 19) + '  ' + String(m).trim()); if (helperLog.length > 60) helperLog.shift(); };
 
 const IS_WIN = process.platform === 'win32';
-const START_HIDDEN = process.argv.includes('--hidden');
+// --hidden steht im Windows-Autostart-Eintrag. Ob das Fenster dann aufgeht, entscheidet „Minimiert starten“.
+const AUTOSTARTED = process.argv.includes('--hidden');
 // Windows meldet den Autostart nur als aktiv, wenn man mit denselben Start-Argumenten fragt,
 // mit denen er eingetragen wurde. Ohne die Argumente kam immer „aus“ zurück und der Schalter sprang zurück.
 const LOGIN_ARGS = ['--hidden'];
+function autostartInfo() {
+  try {
+    const s = app.getLoginItemSettings({ args: LOGIN_ARGS });
+    return { registered: !!s.openAtLogin, allowed: s.executableWillLaunchAtLogin !== false, last: settings.lastAutostart || 0, autostarted: AUTOSTARTED };
+  } catch (_) { return { registered: false, allowed: true, last: settings.lastAutostart || 0, autostarted: AUTOSTARTED }; }
+}
 function autostartOn() {
   try {
     const s = app.getLoginItemSettings({ args: LOGIN_ARGS });
@@ -222,8 +229,17 @@ function createWindow() {
   });
   win.removeMenu();
   win.loadURL('app://fusionx/index.html');
-  winVisible = !(START_HIDDEN || settings.startMinimized);
-  win.once('ready-to-show', () => { if (winVisible) win.show(); });
+  winVisible = !settings.startMinimized;
+  win.once('ready-to-show', () => {
+    if (winVisible) win.show();
+    // Unsichtbar mit Windows gestartet: kurz Bescheid geben, sonst wirkt es, als wäre Fusion-X nicht gestartet
+    else if (AUTOSTARTED && Notification.isSupported()) {
+      try {
+        const n = new Notification({ title: 'Fusion-X Audio läuft', body: 'Fusion-X ist im Infobereich unten rechts. Klick hier, um es zu öffnen.', icon: path.join(__dirname, 'renderer', 'brand', 'emblem.png'), silent: true });
+        n.on('click', showWindow); n.show();
+      } catch (_) {}
+    }
+  });
   // Sichtbarkeit an die Oberfläche melden: im Tray wird nichts gezeichnet und seltener abgefragt
   const vis = () => { winVisible = win.isVisible() && !win.isMinimized(); send('fx:visible', winVisible); };
   ['show', 'hide', 'minimize', 'restore'].forEach((ev) => win.on(ev, vis));
@@ -369,7 +385,8 @@ function setupIpc() {
     visible: winVisible,
     community: { invite: COMMUNITY.discordInvite || '', discord: !!COMMUNITY.reportWebhook, presets: !!COMMUNITY.presetWebhook },
     link: (() => { rendererReady = true; const l = pendingLink; pendingLink = null; return l; })(),
-    autostart: autostartOn()
+    autostart: autostartOn(),
+    autostartInfo: autostartInfo()
   }));
   ipcMain.handle('fx:call', async (_e, cmd, args) => {
     if (!backend) throw new Error(backendError || 'Audio-Helfer nicht verfügbar');
@@ -546,6 +563,7 @@ pendingLink = linkFromArgv(process.argv);
 
 app.whenReady().then(async () => {
   loadSettings();
+  if (AUTOSTARTED) { settings.lastAutostart = Date.now(); saveSettings(); }
 
   protocol.handle('app', (req) => {
     const url = new URL(req.url);
