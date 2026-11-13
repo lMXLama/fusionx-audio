@@ -4,17 +4,18 @@ import { api, TOKEN, summary } from './lib.mjs';
 
 if (!TOKEN) { console.log('Kein Bot-Token – überspringe Profil.'); process.exit(0); }
 const DESCRIPTION = [
-  'Der offizielle Bot von **Fusion-X Audio**, der kostenlosen Sound-Zentrale für Windows.',
+  'Der offizielle Bot von **Fusion-X**, den kostenlosen Programmen für Gamer und Streamer.',
   '',
-  '🎧 Lautstärke pro App, KI-Rauschunterdrückung, Stream-Mix und Equalizer',
-  '🐞 Meldungen aus der App landen direkt beim Entwickler',
+  '🎧 Fusion-X Audio: die Sound-Zentrale für Windows',
+  '⛏️ Fusion-X Launcher: der Minecraft-Launcher mit Mods, Shadern und Cosmetics',
   '🆕 Jede neue Version sofort im Changelog',
   '',
-  '⬇️ https://lmxlama.github.io/fusionx-audio/'
+  '🎧 https://lmxlama.github.io/fusionx-audio/',
+  '⛏️ https://lmxlama.github.io/fusionx-launcher/'
 ].join('\n');
 
 try {
-  await api('PATCH', '/applications/@me', { description: DESCRIPTION, tags: ['audio', 'support', 'streaming', 'windows', 'utility'] });
+  await api('PATCH', '/applications/@me', { description: DESCRIPTION, tags: ['audio', 'minecraft', 'streaming', 'support', 'utility'] });
   summary('- Bot-Beschreibung („Über mich“) und Tags gesetzt');
 } catch (e) { summary('- ⚠️ Bot-Beschreibung: ' + e.message); }
 

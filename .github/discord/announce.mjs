@@ -10,7 +10,8 @@ const de = (entry.de || []).map((l) => '• ' + l).join('\n') || 'Verbesserungen
 const en = (entry.en || []).map((l) => '• ' + l).join('\n');
 try {
   const channels = await api('GET', '/guilds/' + GUILD + '/channels');
-  const ch = channels.find((c) => c.name.includes('changelog') && (c.type === 0 || c.type === 5));
+  const isText = (c) => c.type === 0 || c.type === 5;
+  const ch = channels.find((c) => c.name.includes('audio-changelog') && isText(c)) || channels.find((c) => c.name.includes('changelog') && !c.name.includes('launcher') && isText(c));
   const roles = await api('GET', '/guilds/' + GUILD + '/roles');
   const ping = roles.find((r) => r.name === 'Update-Ping');
   if (!ch) { console.log('Kein #changelog gefunden.'); process.exit(0); }

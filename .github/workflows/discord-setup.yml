@@ -4,6 +4,11 @@ name: Discord einrichten
 
 on:
   workflow_dispatch:
+    inputs:
+      ankuendigung:
+        description: Ankündigung „Ein Discord für alle Projekte“ posten
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -21,6 +26,8 @@ jobs:
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID || vars.DISCORD_GUILD_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANNOUNCE: ${{ inputs.ankuendigung && '1' || '0' }}
       - name: Bot-Profil
         run: node .github/discord/profile.mjs
         env:

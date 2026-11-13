@@ -1,0 +1,25 @@
+# Postet neue Versionen des Fusion-X Launchers (eigenes Repo) in #launcher-changelog.
+# Läuft alle 30 Minuten und postet jede Version genau einmal. Von Hand: Actions → „Launcher-Updates posten“.
+name: Launcher-Updates posten
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node .github/discord/launcher-news.mjs
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID || vars.DISCORD_GUILD_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
